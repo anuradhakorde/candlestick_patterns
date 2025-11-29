@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <nav>
+        <div class="container">
+            <h1><a href="{% url 'myapp:home' %}" style="color: white; text-decoration: none;">CandlestickPattern</a></h1>
+            <ul>
+                <li><a href="{% url 'myapp:home' %}">Home</a></li>
+                {% if user.is_staff or user.is_superuser %}
+                    <li><a href="{% url 'myapp:user_list' %}">Users</a></li>
+                {% endif %}
+                <li><a href="{% url 'csv_upload:upload_csv' %}">Upload CSV</a></li>
+                <li><a href="{% url 'csv_upload:csv_list' %}">View CSV Files</a></li>
+                <li><a href="/admin/">Admin</a></li>
+                {% if user.is_authenticated %}
+                    <li><a href="{% url 'myapp:profile' %}">Profile</a></li>
+                    <li><a href="/admin/logout/">Logout</a></li>
+                {% else %}
+                    <li><a href="/admin/login/">Login</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header style="text-align: center; margin: 40px 0;">
+            <h1>{{ title }}</h1>
+            <p style="font-size: 1.2em; color: #666;">{{ description }}</p>
+        </header>
+
+        <main>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin: 40px 0;">
+                
+                <!-- User Management Card (Staff/Admin Only) -->
+                {% if user.is_staff or user.is_superuser %}
+                <div style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center;">
+                    <h3 style="color: var(--info-color); margin-bottom: 15px;">👥 User Management</h3>
+                    <p style="margin-bottom: 20px; color: #666;">Create, edit, and manage user accounts and permissions.</p>
+                    <a href="{% url 'myapp:user_list' %}" class="btn" style="background-color: var(--info-color); color: white;">Manage Users</a>
+                </div>
+                
+                <!-- Stock Management Card (Staff/Admin Only) -->
+                <div style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center;">
+                    <h3 style="color: var(--primary-color); margin-bottom: 15px;">🏢 Stock Management</h3>
+                    <p style="margin-bottom: 20px; color: #666;">Manage your stock portfolio and company information.</p>
+                    <a href="{% url 'csv_upload:stock_list' %}" class="btn btn-primary">Manage Stocks</a>
+                </div>
+                
+                <!-- Candlestick Data Card (Staff/Admin Only) -->
+                <div style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center;">
+                    <h3 style="color: var(--danger-color); margin-bottom: 15px;">🕯️ Candlestick Data</h3>
+                    <p style="margin-bottom: 20px; color: #666;">View and manage historical trading data and patterns.</p>
+                    <a href="{% url 'csv_upload:candlestick_list' %}" class="btn" style="background-color: var(--danger-color); color: white;">View Candlesticks</a>
+                </div>
+                {% endif %}
+
+                <!-- CSV Upload Card -->
+                <div style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center;">
+                    <h3 style="color: var(--primary-color); margin-bottom: 15px;">📊 Upload Stock Data</h3>
+                    <p style="margin-bottom: 20px; color: #666;">Upload CSV files containing historical stock data for analysis.</p>
+                    <a href="{% url 'csv_upload:upload_csv' %}" class="btn btn-primary">Upload CSV File</a>
+                </div>
+
+                <!-- View CSV Files Card -->
+                <div style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center;">
+                    <h3 style="color: var(--success-color); margin-bottom: 15px;">📋 Data Overview</h3>
+                    <p style="margin-bottom: 20px; color: #666;">Browse uploaded files and view data statistics.</p>
+                    <a href="{% url 'csv_upload:csv_list' %}" class="btn btn-success">View Data Files</a>
+                </div>
+
+                <!-- Pattern Analysis Card -->
+                <div style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center;">
+                    <h3 style="color: var(--warning-color); margin-bottom: 15px;">🔍 Pattern Detection</h3>
+                    <p style="margin-bottom: 20px; color: #666;">Analyze candlestick patterns in your stock data.</p>
+                    <button class="btn" style="background-color: var(--warning-color); color: white;" disabled>Coming Soon</button>
+                </div>
+
+                <!-- Admin Panel Card -->
+                <div style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center;">
+                    <h3 style="color: var(--danger-color); margin-bottom: 15px;">⚙️ Administration</h3>
+                    <p style="margin-bottom: 20px; color: #666;">Access Django admin panel for advanced management.</p>
+                    <a href="/admin/" class="btn" style="background-color: var(--danger-color); color: white;">Admin Panel</a>
+                </div>
+
+            </div>
+
+            <section style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin: 40px 0;">
+                <h2 style="color: var(--dark-color); margin-bottom: 20px;">About This Project</h2>
+                <p style="line-height: 1.8; color: #666;">
+                    CandlestickPattern is a Django-based web application designed for analyzing stock market data and detecting 
+                    various candlestick patterns. The application allows you to:
+                </p>
+                <ul style="margin: 20px 0; padding-left: 30px; line-height: 1.8; color: #666;">
+                    <li><strong>Upload CSV Files:</strong> Import historical stock data from various sources</li>
+                    <li><strong>Store Data:</strong> Efficiently store stock information in PostgreSQL database</li>
+                    <li><strong>Pattern Detection:</strong> Identify common candlestick patterns like Doji, Engulfing, etc.</li>
+                    <li><strong>Visualization:</strong> Generate interactive charts using Plotly</li>
+                    <li><strong>Analysis Tools:</strong> Comprehensive stock market analysis capabilities</li>
+                </ul>
+            </section>
+
+            <!-- Quick Stats -->
+            <section style="background: linear-gradient(135deg, var(--primary-color), var(--info-color)); color: white; padding: 30px; border-radius: 10px; margin: 40px 0; text-align: center;">
+                <h2 style="margin-bottom: 20px;">Project Status</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 20px;">
+                    <div>
+                        <h3 style="font-size: 2em; margin: 0;">✅</h3>
+                        <p>Django Setup Complete</p>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 2em; margin: 0;">🗃️</h3>
+                        <p>PostgreSQL Connected</p>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 2em; margin: 0;">📊</h3>
+                        <p>CSV Upload Ready</p>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 2em; margin: 0;">🔧</h3>
+                        <p>Development Mode</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <footer style="background: var(--dark-color); color: white; text-align: center; padding: 20px; margin-top: 60px;">
+        <p>&copy; 2025 CandlestickPattern - Stock Market Analysis Tool</p>
+    </footer>
+</body>
+</html>

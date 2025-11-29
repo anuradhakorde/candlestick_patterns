@@ -1,0 +1,1 @@
+-- SQL logic for bearish engulfing pattern detection here

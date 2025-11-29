@@ -1,0 +1,8 @@
+Below is the plan
+1. Create Postgresql db server using docker
+1.1 Create tables and structure to store the hsitorical stocks data
+1.2 Fill in some sample Data
+2. Create a Vanila project which will connect to database and show a sample page. 
+3. Get the historical stocks data from internet 
+3.1 It can be downloaded from https://www.samco.in/bhavcopy-nse-bse-mcx
+4. Create database loader script/ python file for those files

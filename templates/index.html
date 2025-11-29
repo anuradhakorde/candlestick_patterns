@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Web Interface</title>
+</head>
+<body>
+    <h1>Welcome to the Web Interface</h1>
+    <p>Use the form below to select a table:</p>
+    <form action="/search" method="POST">
+        <label for="table">Table:</label>
+        <select id="table" name="table">
+            <option value="stocks">Stocks</option>
+            <option value="candlesticks">Candlesticks</option>
+        </select>
+        <br>
+        <input type="submit" value="Select">
+    </form>
+    <br>
+    <a href="/download">Download Data</a>
+</body>
+</html>

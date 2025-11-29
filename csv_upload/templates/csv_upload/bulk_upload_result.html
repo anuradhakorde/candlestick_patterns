@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+
+{% block title %}Bulk Upload Results - CandlestickPattern{% endblock %}
+
+{% block content %}
+<header style="text-align: center; margin: 40px 0;">
+    <h1>📦 Bulk Upload Results</h1>
+    <p style="font-size: 1.2em; color: #666;">Multiple CSV files processing summary</p>
+</header>
+
+<main>
+    <!-- Overall Summary -->
+    <section style="background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; padding: 30px; border-radius: 10px; margin: 20px 0; text-align: center;">
+        <h2 style="margin-bottom: 20px;">📊 Upload Summary</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 20px;">
+            <div>
+                <div style="font-size: 2.5em; margin-bottom: 5px;">📁</div>
+                <h3 style="margin: 0; font-size: 2em;">{{ result.total_files_processed|add:result.total_files_failed }}</h3>
+                <p style="margin: 5px 0; opacity: 0.9;">Total Files</p>
+            </div>
+            <div>
+                <div style="font-size: 2.5em; margin-bottom: 5px;">✅</div>
+                <h3 style="margin: 0; font-size: 2em;">{{ result.total_files_processed }}</h3>
+                <p style="margin: 5px 0; opacity: 0.9;">Successful</p>
+            </div>
+            <div>
+                <div style="font-size: 2.5em; margin-bottom: 5px;">❌</div>
+                <h3 style="margin: 0; font-size: 2em;">{{ result.total_files_failed }}</h3>
+                <p style="margin: 5px 0; opacity: 0.9;">Failed</p>
+            </div>
+            <div>
+                <div style="font-size: 2.5em; margin-bottom: 5px;">🏢</div>
+                <h3 style="margin: 0; font-size: 2em;">{{ result.total_stocks }}</h3>
+                <p style="margin: 5px 0; opacity: 0.9;">Stocks Processed</p>
+            </div>
+            <div>
+                <div style="font-size: 2.5em; margin-bottom: 5px;">🕯️</div>
+                <h3 style="margin: 0; font-size: 2em;">{{ result.total_candlesticks }}</h3>
+                <p style="margin: 5px 0; opacity: 0.9;">Candlesticks</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Successfully Processed Files -->
+    {% if result.processed_files %}
+    <section style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin: 20px 0;">
+        <h3 style="color: #27ae60; margin-bottom: 20px;">✅ Successfully Processed Files ({{ result.processed_files|length }})</h3>
+        <div style="display: grid; gap: 15px;">
+            {% for file in result.processed_files %}
+                <div style="background: #e8f5e8; padding: 20px; border-radius: 8px; border-left: 4px solid #27ae60;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                        <div style="flex: 1;">
+                            <h4 style="margin: 0 0 10px 0; color: #155724;">
+                                📄 {{ file.filename }}
+                            </h4>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 10px;">
+                                <p style="margin: 0; color: #666; font-size: 0.9em;">
+                                    📅 Date: {{ file.date }}
+                                </p>
+                                <p style="margin: 0; color: #666; font-size: 0.9em;">
+                                    🏪 Exchange: {{ file.exchange }}
+                                </p>
+                                <p style="margin: 0; color: #666; font-size: 0.9em;">
+                                    🏢 Stocks: {{ file.stocks_processed }}
+                                </p>
+                                <p style="margin: 0; color: #666; font-size: 0.9em;">
+                                    🕯️ Candlesticks: {{ file.candlesticks_processed }}
+                                </p>
+                            </div>
+                            
+                            {% if file.warnings %}
+                                <div style="background: #fff3cd; padding: 10px; border-radius: 4px; border-left: 3px solid #ffc107; margin-top: 10px;">
+                                    <strong style="color: #856404;">Warnings:</strong>
+                                    <ul style="margin: 5px 0; padding-left: 20px; color: #856404;">
+                                        {% for warning in file.warnings|slice:":3" %}
+                                            <li>{{ warning }}</li>
+                                        {% endfor %}
+                                        {% if file.warnings|length > 3 %}
+                                            <li><em>... and {{ file.warnings|length|add:"-3" }} more warnings</em></li>
+                                        {% endif %}
+                                    </ul>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Failed Files -->
+    {% if result.failed_files %}
+    <section style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin: 20px 0;">
+        <h3 style="color: #e74c3c; margin-bottom: 20px;">❌ Failed Files ({{ result.failed_files|length }})</h3>
+        <div style="display: grid; gap: 15px;">
+            {% for file in result.failed_files %}
+                <div style="background: #f8d7da; padding: 20px; border-radius: 8px; border-left: 4px solid #e74c3c;">
+                    <h4 style="margin: 0 0 10px 0; color: #721c24;">
+                        📄 {{ file.filename }}
+                    </h4>
+                    <div style="background: #f5c6cb; padding: 10px; border-radius: 4px; margin-top: 10px;">
+                        <strong style="color: #721c24;">Error:</strong>
+                        <p style="margin: 5px 0; color: #721c24;">{{ file.error }}</p>
+                    </div>
+                    {% if file.stocks_processed > 0 or file.candlesticks_processed > 0 %}
+                        <div style="margin-top: 10px; font-size: 0.9em; color: #666;">
+                            <em>Partial processing: {{ file.stocks_processed }} stocks, {{ file.candlesticks_processed }} candlesticks before failure</em>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Global Errors -->
+    {% if result.errors %}
+    <section style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin: 20px 0;">
+        <h3 style="color: #e74c3c; margin-bottom: 20px;">⚠️ Processing Errors</h3>
+        <div style="background: #f8d7da; padding: 20px; border-radius: 8px; border-left: 4px solid #e74c3c;">
+            <ul style="margin: 0; color: #721c24; padding-left: 20px;">
+                {% for error in result.errors|slice:":10" %}
+                    <li style="margin-bottom: 5px;">{{ error }}</li>
+                {% endfor %}
+                {% if result.errors|length > 10 %}
+                    <li style="margin-bottom: 5px;"><em>... and {{ result.errors|length|add:"-10" }} more errors</em></li>
+                {% endif %}
+            </ul>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Processing Details -->
+    <section style="background: #f8f9fa; padding: 30px; border-radius: 10px; margin: 20px 0;">
+        <h3 style="color: #6c757d; margin-bottom: 20px;">📋 Processing Details</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+            <div style="text-align: center;">
+                <div style="font-size: 2em; margin-bottom: 10px;">📦</div>
+                <h4 style="color: #495057; margin: 0;">ZIP File</h4>
+                <p style="color: #6c757d; margin: 5px 0;">{{ result.filename }}</p>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: 2em; margin-bottom: 10px;">📊</div>
+                <h4 style="color: #495057; margin: 0;">Success Rate</h4>
+                <p style="color: #6c757d; margin: 5px 0;">
+                    {% if result.total_files_processed|add:result.total_files_failed > 0 %}
+                        {% widthratio result.total_files_processed result.total_files_processed|add:result.total_files_failed 100 %}%
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </p>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: 2em; margin-bottom: 10px;">⚡</div>
+                <h4 style="color: #495057; margin: 0;">Processing Mode</h4>
+                <p style="color: #6c757d; margin: 5px 0;">Sequential File Processing</p>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: 2em; margin-bottom: 10px;">♻️</div>
+                <h4 style="color: #495057; margin: 0;">Space Management</h4>
+                <p style="color: #6c757d; margin: 5px 0;">All files removed after processing</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Actions -->
+    <section style="background: linear-gradient(135deg, var(--success-color), var(--info-color)); color: white; padding: 30px; border-radius: 10px; margin: 40px 0; text-align: center;">
+        <h3 style="margin-bottom: 20px;">Next Steps</h3>
+        <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
+            <a href="{% url 'csv_upload:upload_csv' %}" class="btn" style="background-color: rgba(255,255,255,0.2); color: white; border: 2px solid white;">
+                📤 Upload More Files
+            </a>
+            <a href="{% url 'csv_upload:csv_list' %}" class="btn" style="background-color: rgba(255,255,255,0.2); color: white; border: 2px solid white;">
+                📋 View All Data
+            </a>
+            <a href="{% url 'csv_upload:stock_list' %}" class="btn" style="background-color: rgba(255,255,255,0.2); color: white; border: 2px solid white;">
+                🏢 Manage Stocks
+            </a>
+            <a href="{% url 'myapp:home' %}" class="btn" style="background-color: rgba(255,255,255,0.2); color: white; border: 2px solid white;">
+                🏠 Back to Home
+            </a>
+        </div>
+    </section>
+</main>
+{% endblock %}

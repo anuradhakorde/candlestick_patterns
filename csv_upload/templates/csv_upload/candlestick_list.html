@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+
+{% block title %}Candlestick Data Management - CandlestickPattern{% endblock %}
+
+{% block content %}
+<header style="text-align: center; margin: 40px 0;">
+    <h1>🕯️ Candlestick Data Management</h1>
+    <p style="font-size: 1.2em; color: #666;">Manage and analyze your stock market candlestick data</p>
+</header>
+
+<!-- Statistics Cards -->
+<section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 30px 0;">
+    <div style="background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; padding: 25px; border-radius: 10px; text-align: center;">
+        <div style="font-size: 2.5em; margin-bottom: 10px;">🕯️</div>
+        <h3 style="margin: 5px 0; font-size: 2em;">{{ stats.total_candlesticks }}</h3>
+        <p style="margin: 0; opacity: 0.9;">Total Records</p>
+    </div>
+    <div style="background: linear-gradient(135deg, #3498db, #2980b9); color: white; padding: 25px; border-radius: 10px; text-align: center;">
+        <div style="font-size: 2.5em; margin-bottom: 10px;">🏢</div>
+        <h3 style="margin: 5px 0; font-size: 2em;">{{ stats.total_stocks }}</h3>
+        <p style="margin: 0; opacity: 0.9;">Unique Stocks</p>
+    </div>
+    <div style="background: linear-gradient(135deg, #9b59b6, #8e44ad); color: white; padding: 25px; border-radius: 10px; text-align: center;">
+        <div style="font-size: 2.5em; margin-bottom: 10px;">🔍</div>
+        <h3 style="margin: 5px 0; font-size: 2em;">{{ stats.filtered_count }}</h3>
+        <p style="margin: 0; opacity: 0.9;">{% if is_filtered %}Filtered{% else %}Total{% endif %} Results</p>
+    </div>
+</section>
+
+<!-- Filter Section -->
+<section style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin: 20px 0;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3 style="color: var(--primary-color); margin: 0;">🔍 Filter Candlestick Data</h3>
+        <a href="{% url 'csv_upload:candlestick_create' %}" class="btn btn-primary">
+            ➕ Add New Record
+        </a>
+    </div>
+    
+    <form method="get" style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto auto; gap: 15px; align-items: end;">
+        <div>
+            <label style="font-weight: bold; color: var(--dark-color);">Stock</label>
+            {{ form.stock }}
+        </div>
+        <div>
+            <label style="font-weight: bold; color: var(--dark-color);">From Date</label>
+            {{ form.date_from }}
+        </div>
+        <div>
+            <label style="font-weight: bold; color: var(--dark-color);">To Date</label>
+            {{ form.date_to }}
+        </div>
+        <div>
+            <label style="font-weight: bold; color: var(--dark-color);">Exchange</label>
+            {{ form.exchange }}
+        </div>
+        <button type="submit" class="btn btn-primary">🔍 Filter</button>
+        <a href="{% url 'csv_upload:candlestick_list' %}" class="btn" style="background-color: var(--secondary-color); color: white;">🔄 Reset</a>
+    </form>
+</section>
+
+<!-- Candlestick Data List -->
+<section style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin: 20px 0;">
+    {% if page_obj %}
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.85em;">
+                <thead>
+                    <tr style="background: #f8f9fa; border-bottom: 2px solid #e9ecef;">
+                        <th style="padding: 12px; text-align: left; color: var(--dark-color);">Symbol</th>
+                        <th style="padding: 12px; text-align: left; color: var(--dark-color);">Exchange</th>
+                        <th style="padding: 12px; text-align: left; color: var(--dark-color);">Date</th>
+                        <th style="padding: 12px; text-align: right; color: var(--dark-color);">Open</th>
+                        <th style="padding: 12px; text-align: right; color: var(--dark-color);">High</th>
+                        <th style="padding: 12px; text-align: right; color: var(--dark-color);">Low</th>
+                        <th style="padding: 12px; text-align: right; color: var(--dark-color);">Close</th>
+                        <th style="padding: 12px; text-align: right; color: var(--dark-color);">Volume</th>
+                        <th style="padding: 12px; text-align: center; color: var(--dark-color);">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for candlestick in page_obj %}
+                    <tr style="border-bottom: 1px solid #f8f9fa; {% cycle '' 'background: #fafafa;' %}">
+                        <td style="padding: 12px; font-weight: bold; color: var(--primary-color);">
+                            <a href="{% url 'csv_upload:candlestick_detail' candlestick.candle_id %}" style="color: var(--primary-color); text-decoration: none;">
+                                {{ candlestick.stock.stock_symbol }}
+                            </a>
+                        </td>
+                        <td style="padding: 12px;">
+                            <span style="background: var(--info-color); color: white; padding: 3px 6px; border-radius: 3px; font-size: 0.75em;">
+                                {{ candlestick.stock.stock_exchange }}
+                            </span>
+                        </td>
+                        <td style="padding: 12px; color: #666;">
+                            {{ candlestick.candle_date|date:"M d, Y" }}
+                        </td>
+                        <td style="padding: 12px; text-align: right; color: #007bff;">₹{{ candlestick.open_price }}</td>
+                        <td style="padding: 12px; text-align: right; color: #28a745; font-weight: bold;">₹{{ candlestick.high_price }}</td>
+                        <td style="padding: 12px; text-align: right; color: #dc3545; font-weight: bold;">₹{{ candlestick.low_price }}</td>
+                        <td style="padding: 12px; text-align: right; color: #6f42c1; font-weight: bold;">₹{{ candlestick.close_price }}</td>
+                        <td style="padding: 12px; text-align: right; color: #666;">
+                            {% if candlestick.number_of_shares %}
+                                {{ candlestick.number_of_shares|floatformat:0 }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td style="padding: 12px; text-align: center;">
+                            <div style="display: flex; gap: 3px; justify-content: center;">
+                                <a href="{% url 'csv_upload:candlestick_detail' candlestick.candle_id %}" 
+                                   class="btn" style="background-color: var(--info-color); color: white; padding: 4px 8px; font-size: 0.7em;">
+                                    👁️
+                                </a>
+                                <a href="{% url 'csv_upload:candlestick_edit' candlestick.candle_id %}" 
+                                   class="btn" style="background-color: var(--warning-color); color: white; padding: 4px 8px; font-size: 0.7em;">
+                                    ✏️
+                                </a>
+                                <a href="{% url 'csv_upload:candlestick_delete' candlestick.candle_id %}" 
+                                   class="btn" style="background-color: var(--danger-color); color: white; padding: 4px 8px; font-size: 0.7em;">
+                                    🗑️
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div style="display: flex; justify-content: center; align-items: center; margin-top: 30px; gap: 10px;">
+            {% if page_obj.has_previous %}
+                <a href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                   class="btn" style="background-color: var(--secondary-color); color: white; padding: 8px 12px;">« First</a>
+                <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                   class="btn" style="background-color: var(--secondary-color); color: white; padding: 8px 12px;">‹ Previous</a>
+            {% endif %}
+            
+            <span style="padding: 8px 16px; background: var(--primary-color); color: white; border-radius: 4px;">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </span>
+            
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                   class="btn" style="background-color: var(--secondary-color); color: white; padding: 8px 12px;">Next ›</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                   class="btn" style="background-color: var(--secondary-color); color: white; padding: 8px 12px;">Last »</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    {% else %}
+        <div style="text-align: center; padding: 60px 20px;">
+            <div style="font-size: 4em; margin-bottom: 20px; color: #ddd;">🕯️</div>
+            <h3 style="color: var(--dark-color); margin-bottom: 15px;">No Candlestick Data Found</h3>
+            <p style="color: #666; margin-bottom: 30px; font-size: 1.1em;">
+                {% if is_filtered %}
+                    No candlestick data matches your search criteria. Try adjusting your filters.
+                {% else %}
+                    You haven't added any candlestick data yet. Start by uploading CSV files or creating records manually!
+                {% endif %}
+            </p>
+            <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                <a href="{% url 'csv_upload:candlestick_create' %}" class="btn btn-primary" style="font-size: 1.1em; padding: 15px 30px;">
+                    ➕ Add Manual Record
+                </a>
+                <a href="{% url 'csv_upload:upload_csv' %}" class="btn btn-success" style="font-size: 1.1em; padding: 15px 30px;">
+                    📤 Upload CSV Data
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</section>
+
+<!-- Quick Actions -->
+<section style="background: linear-gradient(135deg, var(--danger-color), var(--warning-color)); color: white; padding: 30px; border-radius: 10px; margin: 40px 0; text-align: center;">
+    <h3 style="margin-bottom: 20px;">Quick Actions</h3>
+    <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
+        <a href="{% url 'csv_upload:candlestick_create' %}" class="btn" style="background-color: rgba(255,255,255,0.2); color: white; border: 2px solid white;">
+            ➕ Add New Record
+        </a>
+        <a href="{% url 'csv_upload:stock_list' %}" class="btn" style="background-color: rgba(255,255,255,0.2); color: white; border: 2px solid white;">
+            🏢 Manage Stocks
+        </a>
+        <a href="{% url 'csv_upload:upload_csv' %}" class="btn" style="background-color: rgba(255,255,255,0.2); color: white; border: 2px solid white;">
+            📤 Upload CSV Data
+        </a>
+        <a href="{% url 'myapp:home' %}" class="btn" style="background-color: rgba(255,255,255,0.2); color: white; border: 2px solid white;">
+            🏠 Back to Home
+        </a>
+    </div>
+</section>
+{% endblock %}

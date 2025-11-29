@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - CandlestickPattern{% endblock %}
+
+{% block content %}
+<header style="text-align: center; margin: 40px 0;">
+    <h1>🏢 {{ title }}</h1>
+    <p style="font-size: 1.2em; color: #666;">
+        {% if stock %}Edit stock information and details{% else %}Add a new stock to your portfolio{% endif %}
+    </p>
+</header>
+
+<main>
+    <section style="background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin: 20px auto; max-width: 700px;">
+        
+        {% if stock %}
+        <div style="background: #e8f4f8; padding: 20px; border-radius: 8px; border-left: 4px solid var(--info-color); margin-bottom: 30px;">
+            <h4 style="color: var(--info-color); margin-bottom: 10px;">📊 Current Stock Information</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div>
+                    <strong>Symbol:</strong> {{ stock.stock_symbol }}
+                </div>
+                <div>
+                    <strong>Exchange:</strong> {{ stock.stock_exchange|default:"Not specified" }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <form method="post" style="display: flex; flex-direction: column; gap: 25px;">
+            {% csrf_token %}
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <label for="{{ form.stock_symbol.id_for_label }}" style="font-weight: bold; color: var(--dark-color); margin-bottom: 8px; display: block;">
+                        {{ form.stock_symbol.label }}
+                    </label>
+                    {{ form.stock_symbol }}
+                    {% if form.stock_symbol.help_text %}
+                        <small style="color: #666; margin-top: 5px; display: block;">{{ form.stock_symbol.help_text }}</small>
+                    {% endif %}
+                    {% if form.stock_symbol.errors %}
+                        {% for error in form.stock_symbol.errors %}
+                            <div style="color: var(--danger-color); margin-top: 5px; font-size: 0.9em;">{{ error }}</div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.stock_exchange.id_for_label }}" style="font-weight: bold; color: var(--dark-color); margin-bottom: 8px; display: block;">
+                        {{ form.stock_exchange.label }}
+                    </label>
+                    {{ form.stock_exchange }}
+                    {% if form.stock_exchange.help_text %}
+                        <small style="color: #666; margin-top: 5px; display: block;">{{ form.stock_exchange.help_text }}</small>
+                    {% endif %}
+                    {% if form.stock_exchange.errors %}
+                        {% for error in form.stock_exchange.errors %}
+                            <div style="color: var(--danger-color); margin-top: 5px; font-size: 0.9em;">{{ error }}</div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div>
+                <label for="{{ form.stock_name.id_for_label }}" style="font-weight: bold; color: var(--dark-color); margin-bottom: 8px; display: block;">
+                    {{ form.stock_name.label }}
+                </label>
+                {{ form.stock_name }}
+                {% if form.stock_name.help_text %}
+                    <small style="color: #666; margin-top: 5px; display: block;">{{ form.stock_name.help_text }}</small>
+                {% endif %}
+                {% if form.stock_name.errors %}
+                    {% for error in form.stock_name.errors %}
+                        <div style="color: var(--danger-color); margin-top: 5px; font-size: 0.9em;">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <div>
+                <label for="{{ form.stock_group.id_for_label }}" style="font-weight: bold; color: var(--dark-color); margin-bottom: 8px; display: block;">
+                    {{ form.stock_group.label }}
+                </label>
+                {{ form.stock_group }}
+                {% if form.stock_group.help_text %}
+                    <small style="color: #666; margin-top: 5px; display: block;">{{ form.stock_group.help_text }}</small>
+                {% endif %}
+                {% if form.stock_group.errors %}
+                    {% for error in form.stock_group.errors %}
+                        <div style="color: var(--danger-color); margin-top: 5px; font-size: 0.9em;">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            {% if form.non_field_errors %}
+                <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 8px; border: 1px solid #f5c6cb;">
+                    {% for error in form.non_field_errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            
+            <div style="display: flex; gap: 15px; justify-content: center; margin-top: 20px;">
+                <button type="submit" class="btn btn-primary" style="padding: 12px 30px; font-size: 1.1em;">
+                    {% if stock %}✅ {{ submit_text }}{% else %}➕ {{ submit_text }}{% endif %}
+                </button>
+                <a href="{% if stock %}{% url 'csv_upload:stock_detail' stock.stock_id %}{% else %}{% url 'csv_upload:stock_list' %}{% endif %}" 
+                   class="btn" style="background-color: var(--secondary-color); color: white; padding: 12px 30px; font-size: 1.1em;">
+                    🚫 Cancel
+                </a>
+            </div>
+        </form>
+
+        <!-- Help Section -->
+        <div style="margin-top: 40px; padding: 25px; background: #f8f9fa; border-radius: 8px;">
+            <h4 style="color: var(--info-color); margin-bottom: 15px;">💡 Help & Guidelines</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <h5 style="color: var(--dark-color); margin-bottom: 10px;">Stock Symbol</h5>
+                    <ul style="color: #666; line-height: 1.8; padding-left: 20px; margin: 0; font-size: 0.9em;">
+                        <li>Use standard ticker symbols</li>
+                        <li>Examples: RELIANCE, TCS, INFY</li>
+                        <li>Maximum 16 characters</li>
+                        <li>Letters, numbers, &, -, . allowed</li>
+                    </ul>
+                </div>
+                <div>
+                    <h5 style="color: var(--dark-color); margin-bottom: 10px;">Exchange & Group</h5>
+                    <ul style="color: #666; line-height: 1.8; padding-left: 20px; margin: 0; font-size: 0.9em;">
+                        <li>Exchange: BSE, NSE, etc.</li>
+                        <li>Group: A, B, T, EQ, etc.</li>
+                        <li>Both are optional but recommended</li>
+                        <li>Helps in categorization and filtering</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Actions -->
+    <section style="background: linear-gradient(135deg, var(--info-color), var(--primary-color)); color: white; padding: 30px; border-radius: 10px; margin: 40px 0; text-align: center;">
+        <h3 style="margin-bottom: 20px;">Quick Actions</h3>
+        <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
+            <a href="{% url 'csv_upload:stock_list' %}" class="btn" style="background-color: rgba(255,255,255,0.2); color: white; border: 2px solid white;">
+                📋 View All Stocks
+            </a>
+            {% if stock %}
+            <a href="{% url 'csv_upload:stock_detail' stock.stock_id %}" class="btn" style="background-color: rgba(255,255,255,0.2); color: white; border: 2px solid white;">
+                👁️ View Details
+            </a>
+            {% endif %}
+            <a href="{% url 'csv_upload:upload_csv' %}" class="btn" style="background-color: rgba(255,255,255,0.2); color: white; border: 2px solid white;">
+                📤 Upload CSV Data
+            </a>
+            <a href="{% url 'myapp:home' %}" class="btn" style="background-color: rgba(255,255,255,0.2); color: white; border: 2px solid white;">
+                🏠 Home
+            </a>
+        </div>
+    </section>
+</main>
+{% endblock %}

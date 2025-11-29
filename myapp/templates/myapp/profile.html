@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile - CandlestickPattern</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <nav>
+        <div class="container">
+            <h1><a href="{% url 'myapp:home' %}" style="color: white; text-decoration: none;">CandlestickPattern</a></h1>
+            <ul>
+                <li><a href="{% url 'myapp:home' %}">Home</a></li>
+                <li><a href="{% url 'csv_upload:upload_csv' %}">Upload CSV</a></li>
+                <li><a href="{% url 'csv_upload:csv_list' %}">View CSV Files</a></li>
+                <li><a href="/admin/">Admin</a></li>
+                <li><a href="{% url 'myapp:profile' %}">Profile</a></li>
+                <li><a href="/admin/logout/">Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header style="text-align: center; margin: 40px 0;">
+            <h1>User Profile</h1>
+        </header>
+
+        <main>
+            <div style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 600px; margin: 0 auto;">
+                
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <div style="width: 80px; height: 80px; background: var(--primary-color); border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; color: white; font-size: 2em;">
+                        {{ user.username|first|upper }}
+                    </div>
+                    <h2 style="margin: 0; color: var(--dark-color);">{{ user.get_full_name|default:user.username }}</h2>
+                    <p style="color: #666; margin: 5px 0;">{{ user.email }}</p>
+                </div>
+
+                <div style="border-top: 1px solid #eee; padding-top: 30px;">
+                    <h3 style="color: var(--dark-color); margin-bottom: 20px;">Account Information</h3>
+                    
+                    <div style="display: grid; gap: 15px;">
+                        <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f0f0;">
+                            <strong>Username:</strong>
+                            <span>{{ user.username }}</span>
+                        </div>
+                        
+                        <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f0f0;">
+                            <strong>Email:</strong>
+                            <span>{{ user.email|default:"Not provided" }}</span>
+                        </div>
+                        
+                        <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f0f0;">
+                            <strong>First Name:</strong>
+                            <span>{{ user.first_name|default:"Not provided" }}</span>
+                        </div>
+                        
+                        <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f0f0;">
+                            <strong>Last Name:</strong>
+                            <span>{{ user.last_name|default:"Not provided" }}</span>
+                        </div>
+                        
+                        <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f0f0;">
+                            <strong>Staff Status:</strong>
+                            <span>{{ user.is_staff|yesno:"Yes,No" }}</span>
+                        </div>
+                        
+                        <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f0f0;">
+                            <strong>Superuser:</strong>
+                            <span>{{ user.is_superuser|yesno:"Yes,No" }}</span>
+                        </div>
+                        
+                        <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f0f0;">
+                            <strong>Date Joined:</strong>
+                            <span>{{ user.date_joined|date:"F j, Y" }}</span>
+                        </div>
+                        
+                        <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f0f0;">
+                            <strong>Last Login:</strong>
+                            <span>{{ user.last_login|date:"F j, Y g:i A"|default:"Never" }}</span>
+                        </div>
+
+                        {% if user.phone_number %}
+                        <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f0f0;">
+                            <strong>Phone:</strong>
+                            <span>{{ user.phone_number }}</span>
+                        </div>
+                        {% endif %}
+
+                        {% if user.date_of_birth %}
+                        <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f0f0;">
+                            <strong>Date of Birth:</strong>
+                            <span>{{ user.date_of_birth|date:"F j, Y" }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 30px;">
+                    <a href="/admin/auth/user/{{ user.id }}/change/" class="btn btn-primary">Edit Profile</a>
+                    <a href="{% url 'myapp:home' %}" class="btn" style="background-color: var(--secondary-color); color: white; margin-left: 10px;">Back to Home</a>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <footer style="background: var(--dark-color); color: white; text-align: center; padding: 20px; margin-top: 60px;">
+        <p>&copy; 2025 CandlestickPattern - Stock Market Analysis Tool</p>
+    </footer>
+</body>
+</html>

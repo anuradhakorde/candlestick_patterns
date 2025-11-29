@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+
+{% block title %}Stock Management - CandlestickPattern{% endblock %}
+
+{% block content %}
+<header style="text-align: center; margin: 40px 0;">
+    <h1>🏢 Stock Management</h1>
+    <p style="font-size: 1.2em; color: #666;">Manage your stock portfolio and market data</p>
+</header>
+
+<!-- Statistics Cards -->
+<section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 30px 0;">
+    <div style="background: linear-gradient(135deg, #3498db, #2980b9); color: white; padding: 25px; border-radius: 10px; text-align: center;">
+        <div style="font-size: 2.5em; margin-bottom: 10px;">🏢</div>
+        <h3 style="margin: 5px 0; font-size: 2em;">{{ stats.total_stocks }}</h3>
+        <p style="margin: 0; opacity: 0.9;">Total Stocks</p>
+    </div>
+    <div style="background: linear-gradient(135deg, #2ecc71, #27ae60); color: white; padding: 25px; border-radius: 10px; text-align: center;">
+        <div style="font-size: 2.5em; margin-bottom: 10px;">🏪</div>
+        <h3 style="margin: 5px 0; font-size: 2em;">{{ stats.total_exchanges }}</h3>
+        <p style="margin: 0; opacity: 0.9;">Exchanges</p>
+    </div>
+    <div style="background: linear-gradient(135deg, #f39c12, #e67e22); color: white; padding: 25px; border-radius: 10px; text-align: center;">
+        <div style="font-size: 2.5em; margin-bottom: 10px;">🕯️</div>
+        <h3 style="margin: 5px 0; font-size: 2em;">{{ stats.total_candlesticks }}</h3>
+        <p style="margin: 0; opacity: 0.9;">Candlestick Records</p>
+    </div>
+    <div style="background: linear-gradient(135deg, #9b59b6, #8e44ad); color: white; padding: 25px; border-radius: 10px; text-align: center;">
+        <div style="font-size: 2.5em; margin-bottom: 10px;">🔍</div>
+        <h3 style="margin: 5px 0; font-size: 2em;">{{ stats.filtered_count }}</h3>
+        <p style="margin: 0; opacity: 0.9;">{% if is_filtered %}Filtered{% else %}Total{% endif %} Results</p>
+    </div>
+</section>
+
+<!-- Search and Filter Section -->
+<section style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin: 20px 0;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3 style="color: var(--primary-color); margin: 0;">📋 Search & Filter Stocks</h3>
+        <a href="{% url 'csv_upload:stock_create' %}" class="btn btn-primary">
+            ➕ Add New Stock
+        </a>
+    </div>
+    
+    <form method="get" style="display: grid; grid-template-columns: 1fr 1fr 1fr auto auto; gap: 15px; align-items: end;">
+        <div>
+            <label style="font-weight: bold; color: var(--dark-color);">Search</label>
+            {{ form.search }}
+        </div>
+        <div>
+            <label style="font-weight: bold; color: var(--dark-color);">Exchange</label>
+            {{ form.exchange }}
+        </div>
+        <div>
+            <label style="font-weight: bold; color: var(--dark-color);">Group</label>
+            {{ form.group }}
+        </div>
+        <button type="submit" class="btn btn-primary">🔍 Filter</button>
+        <a href="{% url 'csv_upload:stock_list' %}" class="btn" style="background-color: var(--secondary-color); color: white;">🔄 Reset</a>
+    </form>
+</section>
+
+<!-- Stocks List -->
+<section style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin: 20px 0;">
+    {% if page_obj %}
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+                <thead>
+                    <tr style="background: #f8f9fa; border-bottom: 2px solid #e9ecef;">
+                        <th style="padding: 15px; text-align: left; color: var(--dark-color);">Symbol</th>
+                        <th style="padding: 15px; text-align: left; color: var(--dark-color);">Company Name</th>
+                        <th style="padding: 15px; text-align: center; color: var(--dark-color);">Exchange</th>
+                        <th style="padding: 15px; text-align: center; color: var(--dark-color);">Group</th>
+                        <th style="padding: 15px; text-align: center; color: var(--dark-color);">Data Points</th>
+                        <th style="padding: 15px; text-align: center; color: var(--dark-color);">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stock in page_obj %}
+                    <tr style="border-bottom: 1px solid #f8f9fa; {% if forloop.counter0|divisibleby:2 %}background: #fafafa;{% endif %}">
+                        <td style="padding: 15px; font-weight: bold; color: var(--primary-color);">
+                            <a href="{% url 'csv_upload:stock_detail' stock.stock_id %}" style="color: var(--primary-color); text-decoration: none;">
+                                {{ stock.stock_symbol }}
+                            </a>
+                        </td>
+                        <td style="padding: 15px; color: var(--dark-color);">
+                            {{ stock.stock_name|default:"—" }}
+                        </td>
+                        <td style="padding: 15px; text-align: center;">
+                            <span style="background: var(--info-color); color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.8em;">
+                                {{ stock.stock_exchange|default:"—" }}
+                            </span>
+                        </td>
+                        <td style="padding: 15px; text-align: center; color: #666;">
+                            {{ stock.stock_group|default:"—" }}
+                        </td>
+                        <td style="padding: 15px; text-align: center;">
+                            <span style="color: var(--success-color); font-weight: bold;">{{ stock.candlestick_count }}</span>
+                        </td>
+                        <td style="padding: 15px; text-align: center;">
+                            <div style="display: flex; gap: 5px; justify-content: center;">
+                                <a href="{% url 'csv_upload:stock_detail' stock.stock_id %}" 
+                                   class="btn" style="background-color: var(--info-color); color: white; padding: 6px 12px; font-size: 0.8em;">
+                                    👁️ View
+                                </a>
+                                <a href="{% url 'csv_upload:stock_edit' stock.stock_id %}" 
+                                   class="btn" style="background-color: var(--warning-color); color: white; padding: 6px 12px; font-size: 0.8em;">
+                                    ✏️ Edit
+                                </a>
+                                <a href="{% url 'csv_upload:stock_delete' stock.stock_id %}" 
+                                   class="btn" style="background-color: var(--danger-color); color: white; padding: 6px 12px; font-size: 0.8em;">
+                                    🗑️ Delete
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div style="display: flex; justify-content: center; align-items: center; margin-top: 30px; gap: 10px;">
+            {% if page_obj.has_previous %}
+                <a href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.exchange %}&exchange={{ request.GET.exchange }}{% endif %}{% if request.GET.group %}&group={{ request.GET.group }}{% endif %}" 
+                   class="btn" style="background-color: var(--secondary-color); color: white; padding: 8px 12px;">« First</a>
+                <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.exchange %}&exchange={{ request.GET.exchange }}{% endif %}{% if request.GET.group %}&group={{ request.GET.group }}{% endif %}" 
+                   class="btn" style="background-color: var(--secondary-color); color: white; padding: 8px 12px;">‹ Previous</a>
+            {% endif %}
+            
+            <span style="padding: 8px 16px; background: var(--primary-color); color: white; border-radius: 4px;">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </span>
+            
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.exchange %}&exchange={{ request.GET.exchange }}{% endif %}{% if request.GET.group %}&group={{ request.GET.group }}{% endif %}" 
+                   class="btn" style="background-color: var(--secondary-color); color: white; padding: 8px 12px;">Next ›</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.exchange %}&exchange={{ request.GET.exchange }}{% endif %}{% if request.GET.group %}&group={{ request.GET.group }}{% endif %}" 
+                   class="btn" style="background-color: var(--secondary-color); color: white; padding: 8px 12px;">Last »</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    {% else %}
+        <div style="text-align: center; padding: 60px 20px;">
+            <div style="font-size: 4em; margin-bottom: 20px; color: #ddd;">🏢</div>
+            <h3 style="color: var(--dark-color); margin-bottom: 15px;">No Stocks Found</h3>
+            <p style="color: #666; margin-bottom: 30px; font-size: 1.1em;">
+                {% if is_filtered %}
+                    No stocks match your search criteria. Try adjusting your filters.
+                {% else %}
+                    You haven't added any stocks yet. Start by creating your first stock record!
+                {% endif %}
+            </p>
+            <a href="{% url 'csv_upload:stock_create' %}" class="btn btn-primary" style="font-size: 1.1em; padding: 15px 30px;">
+                ➕ Add Your First Stock
+            </a>
+        </div>
+    {% endif %}
+</section>
+
+<!-- Quick Actions -->
+<section style="background: linear-gradient(135deg, var(--success-color), var(--info-color)); color: white; padding: 30px; border-radius: 10px; margin: 40px 0; text-align: center;">
+    <h3 style="margin-bottom: 20px;">Quick Actions</h3>
+    <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
+        <a href="{% url 'csv_upload:stock_create' %}" class="btn" style="background-color: rgba(255,255,255,0.2); color: white; border: 2px solid white;">
+            ➕ Add New Stock
+        </a>
+        <a href="{% url 'csv_upload:candlestick_list' %}" class="btn" style="background-color: rgba(255,255,255,0.2); color: white; border: 2px solid white;">
+            🕯️ View Candlesticks
+        </a>
+        <a href="{% url 'csv_upload:upload_csv' %}" class="btn" style="background-color: rgba(255,255,255,0.2); color: white; border: 2px solid white;">
+            📤 Upload CSV Data
+        </a>
+        <a href="{% url 'myapp:home' %}" class="btn" style="background-color: rgba(255,255,255,0.2); color: white; border: 2px solid white;">
+            🏠 Back to Home
+        </a>
+    </div>
+</section>
+{% endblock %}

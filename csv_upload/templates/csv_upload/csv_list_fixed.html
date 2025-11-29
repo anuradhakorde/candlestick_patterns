@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+
+{% block title %}Stock Data Overview - CandlestickPattern{% endblock %}
+
+{% block content %}
+<style>
+.exchange-badge.exchange-bse {
+    background: #e74c3c;
+}
+.exchange-badge.exchange-nse {
+    background: #27ae60;
+}
+.exchange-badge.exchange-default {
+    background: #3498db;
+}
+</style>
+
+<header style="text-align: center; margin: 40px 0;">
+    <h1>📊 Stock Data Overview</h1>
+    <p style="font-size: 1.2em; color: #666;">Browse uploaded stock data and market statistics</p>
+</header>
+
+<main>
+    <!-- Statistics Cards -->
+    <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 30px 0;">
+        <div style="background: linear-gradient(135deg, #3498db, #2980b9); color: white; padding: 25px; border-radius: 10px; text-align: center;">
+            <div style="font-size: 2.5em; margin-bottom: 10px;">🏢</div>
+            <h3 style="margin: 5px 0; font-size: 2em;">{{ stats.total_stocks }}</h3>
+            <p style="margin: 0; opacity: 0.9;">Total Stocks</p>
+        </div>
+        <div style="background: linear-gradient(135deg, #2ecc71, #27ae60); color: white; padding: 25px; border-radius: 10px; text-align: center;">
+            <div style="font-size: 2.5em; margin-bottom: 10px;">🕯️</div>
+            <h3 style="margin: 5px 0; font-size: 2em;">{{ stats.total_candlesticks }}</h3>
+            <p style="margin: 0; opacity: 0.9;">Candlestick Records</p>
+        </div>
+        <div style="background: linear-gradient(135deg, #f39c12, #e67e22); color: white; padding: 25px; border-radius: 10px; text-align: center;">
+            <div style="font-size: 2.5em; margin-bottom: 10px;">🏪</div>
+            <h3 style="margin: 5px 0; font-size: 2em;">{{ stats.total_exchanges }}</h3>
+            <p style="margin: 0; opacity: 0.9;">Exchanges</p>
+        </div>
+        <div style="background: linear-gradient(135deg, #9b59b6, #8e44ad); color: white; padding: 25px; border-radius: 10px; text-align: center;">
+            <div style="font-size: 2.5em; margin-bottom: 10px;">📁</div>
+            <h3 style="margin: 5px 0; font-size: 2em;">{{ stats.total_files }}</h3>
+            <p style="margin: 0; opacity: 0.9;">Files Processed</p>
+        </div>
+        <div style="background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; padding: 25px; border-radius: 10px; text-align: center;">
+            <div style="font-size: 2.5em; margin-bottom: 10px;">📊</div>
+            <h3 style="margin: 5px 0; font-size: 2em;">{{ stats.total_stocks_uploaded }}</h3>
+            <p style="margin: 0; opacity: 0.9;">Stocks Uploaded</p>
+        </div>
+        <div style="background: linear-gradient(135deg, #1abc9c, #16a085); color: white; padding: 25px; border-radius: 10px; text-align: center;">
+            <div style="font-size: 2.5em; margin-bottom: 10px;">📈</div>
+            <h3 style="margin: 5px 0; font-size: 2em;">{{ stats.total_candlesticks_uploaded }}</h3>
+            <p style="margin: 0; opacity: 0.9;">Records Uploaded</p>
+        </div>
+    </section>
+
+    <!-- CSV Files List -->
+    <section style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin: 20px 0;">
+        {% if csv_files %}
+            <div style="margin-bottom: 25px;">
+                <h3 style="color: var(--primary-color); margin-bottom: 10px;">📁 Uploaded CSV Files</h3>
+                <p style="color: #666;">Files processed for stock data analysis</p>
+            </div>
+            
+            <div style="display: grid; gap: 15px;">
+                {% for csv_file in csv_files %}
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid var(--primary-color);">
+                        <div style="display: flex; justify-content: space-between; align-items: start;">
+                            <div style="flex: 1;">
+                                <h4 style="margin: 0 0 8px 0; color: var(--dark-color);">
+                                    📄 {{ csv_file.filename }}
+                                </h4>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 8px;">
+                                    <p style="margin: 0; color: #666; font-size: 0.9em;">
+                                        📅 Date: {{ csv_file.date|date:"M d, Y" }}
+                                    </p>
+                                    <p style="margin: 0; color: #666; font-size: 0.9em;">
+                                        🏪 Exchange: {{ csv_file.exchange }}
+                                    </p>
+                                    <p style="margin: 0; color: #666; font-size: 0.9em;">
+                                        ⏰ Uploaded: {{ csv_file.upload_timestamp|date:"M d, Y H:i" }}
+                                    </p>
+                                </div>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
+                                    <p style="margin: 0; color: #666; font-size: 0.9em;">
+                                        🏢 Stocks: {{ csv_file.stocks_processed }}
+                                    </p>
+                                    <p style="margin: 0; color: #666; font-size: 0.9em;">
+                                        🕯️ Candlesticks: {{ csv_file.candlesticks_processed }}
+                                    </p>
+                                </div>
+                            </div>
+                            <div style="margin-left: 15px; flex-shrink: 0;">
+                                <span class="exchange-badge {% if csv_file.exchange == 'BSE' %}exchange-bse{% elif csv_file.exchange == 'NSE' %}exchange-nse{% else %}exchange-default{% endif %}" style="padding: 4px 12px; border-radius: 12px; font-size: 0.8em; font-weight: 500; color: white;">
+                                    {{ csv_file.exchange }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div style="text-align: center; padding: 60px 20px;">
+                <div style="font-size: 4em; margin-bottom: 20px; color: #ddd;">📂</div>
+                <h3 style="color: var(--dark-color); margin-bottom: 15px;">No CSV Files Found</h3>
+                <p style="color: #666; margin-bottom: 30px; font-size: 1.1em;">
+                    You haven't uploaded any CSV files yet. Start by uploading your first stock data file!
+                </p>
+                <a href="{% url 'csv_upload:upload_csv' %}" class="btn btn-primary" style="font-size: 1.1em; padding: 15px 30px;">
+                    📤 Upload Your First CSV File
+                </a>
+            </div>
+        {% endif %}
+    </section>
+
+    <!-- Recent Activity -->
+    {% if recent_candlesticks %}
+    <section style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin: 20px 0;">
+        <h3 style="color: var(--success-color); margin-bottom: 20px;">🕯️ Recent Candlestick Data</h3>
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+                <thead>
+                    <tr style="background: #f8f9fa; border-bottom: 2px solid #e9ecef;">
+                        <th style="padding: 12px; text-align: left; color: var(--dark-color);">Symbol</th>
+                        <th style="padding: 12px; text-align: left; color: var(--dark-color);">Exchange</th>
+                        <th style="padding: 12px; text-align: left; color: var(--dark-color);">Date</th>
+                        <th style="padding: 12px; text-align: right; color: var(--dark-color);">Open</th>
+                        <th style="padding: 12px; text-align: right; color: var(--dark-color);">High</th>
+                        <th style="padding: 12px; text-align: right; color: var(--dark-color);">Low</th>
+                        <th style="padding: 12px; text-align: right; color: var(--dark-color);">Close</th>
+                        <th style="padding: 12px; text-align: center; color: var(--dark-color);">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for candlestick in recent_candlesticks %}
+                    <tr style="border-bottom: 1px solid #f8f9fa;">
+                        <td style="padding: 12px; font-weight: 500;">{{ candlestick.stock.stock_symbol }}</td>
+                        <td style="padding: 12px; color: #666;">{{ candlestick.stock.stock_exchange }}</td>
+                        <td style="padding: 12px; color: #666;">{{ candlestick.candle_date|date:"M d, Y" }}</td>
+                        <td style="padding: 12px; text-align: right; color: #007bff;">₹{{ candlestick.open_price }}</td>
+                        <td style="padding: 12px; text-align: right; color: #28a745;">₹{{ candlestick.high_price }}</td>
+                        <td style="padding: 12px; text-align: right; color: #dc3545;">₹{{ candlestick.low_price }}</td>
+                        <td style="padding: 12px; text-align: right; color: #6f42c1;">₹{{ candlestick.close_price }}</td>
+                        <td style="padding: 12px; text-align: center;">
+                            <a href="{% url 'csv_upload:stock_detail' candlestick.stock.stock_id %}" class="btn" style="background-color: var(--info-color); color: white; padding: 6px 12px; font-size: 0.8em;">
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Quick Actions -->
+    <section style="background: linear-gradient(135deg, var(--success-color), var(--info-color)); color: white; padding: 30px; border-radius: 10px; margin: 40px 0; text-align: center;">
+        <h3 style="margin-bottom: 20px;">Quick Actions</h3>
+        <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
+            <a href="{% url 'csv_upload:upload_csv' %}" class="btn" style="background-color: rgba(255,255,255,0.2); color: white; border: 2px solid white;">
+                📤 Upload New CSV
+            </a>
+            <a href="{% url 'myapp:home' %}" class="btn" style="background-color: rgba(255,255,255,0.2); color: white; border: 2px solid white;">
+                🏠 Back to Home
+            </a>
+            {% if user.is_staff %}
+            <a href="/admin/" class="btn" style="background-color: rgba(255,255,255,0.2); color: white; border: 2px solid white;">
+                ⚙️ Admin Panel
+            </a>
+            {% endif %}
+        </div>
+    </section>
+</main>
+{% endblock %}

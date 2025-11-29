@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ stock.stock_symbol }} - Stock Details{% endblock %}
+
+{% block content %}
+<header style="text-align: center; margin: 40px 0;">
+    <h1>📊 {{ stock.stock_symbol }}</h1>
+    <p style="font-size: 1.2em; color: #666;">{{ stock.stock_name }} - {{ stock.stock_exchange }}</p>
+</header>
+
+<main>
+    <!-- Stock Information -->
+    <section style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin: 20px 0;">
+        <h3 style="color: var(--primary-color); margin-bottom: 20px;">🏢 Stock Information</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+            <div>
+                <strong style="color: var(--dark-color);">Symbol:</strong>
+                <p style="margin: 5px 0; color: #666;">{{ stock.stock_symbol }}</p>
+            </div>
+            <div>
+                <strong style="color: var(--dark-color);">Company Name:</strong>
+                <p style="margin: 5px 0; color: #666;">{{ stock.stock_name|default:"Not specified" }}</p>
+            </div>
+            <div>
+                <strong style="color: var(--dark-color);">Exchange:</strong>
+                <p style="margin: 5px 0; color: #666;">{{ stock.stock_exchange|default:"Not specified" }}</p>
+            </div>
+            <div>
+                <strong style="color: var(--dark-color);">Group:</strong>
+                <p style="margin: 5px 0; color: #666;">{{ stock.stock_group|default:"Not specified" }}</p>
+            </div>
+        </div>
+        <div style="margin-top: 20px;">
+            <p style="color: #666; font-size: 0.9em;">
+                📈 <strong>Total Records:</strong> {{ total_records }} candlestick data points available
+            </p>
+        </div>
+    </section>
+
+    <!-- Candlestick Data -->
+    <section style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin: 20px 0;">
+        <h3 style="color: var(--success-color); margin-bottom: 20px;">🕯️ Recent Candlestick Data</h3>
+        
+        {% if candlesticks %}
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+                    <thead>
+                        <tr style="background: #f8f9fa; border-bottom: 2px solid #e9ecef;">
+                            <th style="padding: 12px; text-align: left; color: var(--dark-color);">Date</th>
+                            <th style="padding: 12px; text-align: right; color: var(--dark-color);">Open</th>
+                            <th style="padding: 12px; text-align: right; color: var(--dark-color);">High</th>
+                            <th style="padding: 12px; text-align: right; color: var(--dark-color);">Low</th>
+                            <th style="padding: 12px; text-align: right; color: var(--dark-color);">Close</th>
+                            <th style="padding: 12px; text-align: right; color: var(--dark-color);">Prev Close</th>
+                            <th style="padding: 12px; text-align: right; color: var(--dark-color);">Volume</th>
+                            <th style="padding: 12px; text-align: right; color: var(--dark-color);">Trades</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for candlestick in candlesticks %}
+                        <tr style="border-bottom: 1px solid #f8f9fa;">
+                            <td style="padding: 12px; font-weight: 500;">{{ candlestick.candle_date|date:"M d, Y" }}</td>
+                            <td style="padding: 12px; text-align: right; color: #007bff;">₹{{ candlestick.open_price }}</td>
+                            <td style="padding: 12px; text-align: right; color: #28a745;">₹{{ candlestick.high_price }}</td>
+                            <td style="padding: 12px; text-align: right; color: #dc3545;">₹{{ candlestick.low_price }}</td>
+                            <td style="padding: 12px; text-align: right; color: #6f42c1; font-weight: 500;">₹{{ candlestick.close_price }}</td>
+                            <td style="padding: 12px; text-align: right; color: #666;">₹{{ candlestick.prev_close_price }}</td>
+                            <td style="padding: 12px; text-align: right; color: #666;">
+                                {% if candlestick.number_of_shares %}
+                                    {{ candlestick.number_of_shares|floatformat:0 }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td style="padding: 12px; text-align: right; color: #666;">
+                                {% if candlestick.number_of_trades %}
+                                    {{ candlestick.number_of_trades|floatformat:0 }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            {% if total_records > 50 %}
+                <div style="text-align: center; margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                    <p style="color: #666; margin: 0;">
+                        Showing latest 50 records. Total available: {{ total_records }} records.
+                    </p>
+                </div>
+            {% endif %}
+        {% else %}
+            <div style="text-align: center; padding: 40px;">
+                <div style="font-size: 3em; margin-bottom: 20px; color: #ddd;">📈</div>
+                <h4 style="color: var(--dark-color); margin-bottom: 10px;">No Candlestick Data Found</h4>
+                <p style="color: #666;">No trading data available for this stock.</p>
+            </div>
+        {% endif %}
+    </section>
+
+    <!-- Quick Actions -->
+    <section style="background: linear-gradient(135deg, var(--info-color), var(--primary-color)); color: white; padding: 30px; border-radius: 10px; margin: 40px 0; text-align: center;">
+        <h3 style="margin-bottom: 20px;">Quick Actions</h3>
+        <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
+            <a href="{% url 'csv_upload:csv_list' %}" class="btn" style="background-color: rgba(255,255,255,0.2); color: white; border: 2px solid white;">
+                📋 Back to List
+            </a>
+            <a href="{% url 'csv_upload:upload_csv' %}" class="btn" style="background-color: rgba(255,255,255,0.2); color: white; border: 2px solid white;">
+                📤 Upload More Data
+            </a>
+            <button class="btn" style="background-color: rgba(255,255,255,0.2); color: white; border: 2px solid white;" disabled>
+                🔍 Analyze Patterns
+            </button>
+            <a href="{% url 'myapp:home' %}" class="btn" style="background-color: rgba(255,255,255,0.2); color: white; border: 2px solid white;">
+                🏠 Home
+            </a>
+        </div>
+    </section>
+</main>
+{% endblock %}

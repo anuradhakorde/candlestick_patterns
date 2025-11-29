@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - CandlestickPattern</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        .form-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .form-row {
+            margin-bottom: 25px;
+        }
+        .form-row label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+        .form-row input, .form-row select, .form-row textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        .form-row input:focus, .form-row select:focus, .form-row textarea:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+        .form-row .helptext {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .checkbox-row input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+        }
+        .error-list {
+            list-style: none;
+            padding: 0;
+            margin: 10px 0 0 0;
+        }
+        .error-list li {
+            color: var(--danger-color);
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        .required-field {
+            color: var(--danger-color);
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="container">
+            <h1><a href="{% url 'myapp:home' %}" style="color: white; text-decoration: none;">CandlestickPattern</a></h1>
+            <ul>
+                <li><a href="{% url 'myapp:home' %}">Home</a></li>
+                <li><a href="{% url 'myapp:user_list' %}">Users</a></li>
+                <li><a href="{% url 'csv_upload:upload_csv' %}">Upload CSV</a></li>
+                <li><a href="{% url 'csv_upload:csv_list' %}">CSV Files</a></li>
+                <li><a href="/admin/">Admin</a></li>
+                <li><a href="{% url 'myapp:profile' %}">Profile</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header style="margin: 40px 0 20px 0;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1>{{ title }}</h1>
+                    <p style="color: #666; margin: 5px 0;">
+                        {% if user_detail %}
+                            Modify user account details for {{ user_detail.username }}
+                        {% else %}
+                            Create a new user account
+                        {% endif %}
+                    </p>
+                </div>
+                <a href="{% if user_detail %}{% url 'myapp:user_detail' user_detail.id %}{% else %}{% url 'myapp:user_list' %}{% endif %}" 
+                   class="btn" style="background-color: var(--secondary-color); color: white;">
+                    ← Cancel
+                </a>
+            </div>
+        </header>
+
+        <div class="form-container">
+            <form method="post">
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                    <div class="alert alert-error">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <!-- Basic Information Section -->
+                <h3 style="color: var(--primary-color); margin-bottom: 20px; border-bottom: 2px solid var(--primary-color); padding-bottom: 10px;">
+                    👤 Basic Information
+                </h3>
+
+                <div class="form-row">
+                    <label for="{{ form.username.id_for_label }}">
+                        {{ form.username.label }}
+                        {% if form.username.field.required %}<span class="required-field">*</span>{% endif %}
+                    </label>
+                    {{ form.username }}
+                    {% if form.username.help_text %}
+                        <div class="helptext">{{ form.username.help_text }}</div>
+                    {% endif %}
+                    {% if form.username.errors %}
+                        <ul class="error-list">
+                            {% for error in form.username.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="form-row">
+                        <label for="{{ form.first_name.id_for_label }}">
+                            {{ form.first_name.label }}
+                            {% if form.first_name.field.required %}<span class="required-field">*</span>{% endif %}
+                        </label>
+                        {{ form.first_name }}
+                        {% if form.first_name.errors %}
+                            <ul class="error-list">
+                                {% for error in form.first_name.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-row">
+                        <label for="{{ form.last_name.id_for_label }}">
+                            {{ form.last_name.label }}
+                            {% if form.last_name.field.required %}<span class="required-field">*</span>{% endif %}
+                        </label>
+                        {{ form.last_name }}
+                        {% if form.last_name.errors %}
+                            <ul class="error-list">
+                                {% for error in form.last_name.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <label for="{{ form.email.id_for_label }}">
+                        {{ form.email.label }}
+                        {% if form.email.field.required %}<span class="required-field">*</span>{% endif %}
+                    </label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                        <ul class="error-list">
+                            {% for error in form.email.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+
+                <!-- Contact Information Section -->
+                <h3 style="color: var(--primary-color); margin: 30px 0 20px 0; border-bottom: 2px solid var(--primary-color); padding-bottom: 10px;">
+                    📞 Contact Information
+                </h3>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="form-row">
+                        <label for="{{ form.phone_number.id_for_label }}">{{ form.phone_number.label }}</label>
+                        {{ form.phone_number }}
+                        {% if form.phone_number.errors %}
+                            <ul class="error-list">
+                                {% for error in form.phone_number.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-row">
+                        <label for="{{ form.date_of_birth.id_for_label }}">{{ form.date_of_birth.label }}</label>
+                        {{ form.date_of_birth }}
+                        {% if form.date_of_birth.errors %}
+                            <ul class="error-list">
+                                {% for error in form.date_of_birth.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Password Section (for new users only) -->
+                {% if form.password1 %}
+                <h3 style="color: var(--primary-color); margin: 30px 0 20px 0; border-bottom: 2px solid var(--primary-color); padding-bottom: 10px;">
+                    🔒 Password
+                </h3>
+
+                <div class="form-row">
+                    <label for="{{ form.password1.id_for_label }}">
+                        {{ form.password1.label }}
+                        {% if form.password1.field.required %}<span class="required-field">*</span>{% endif %}
+                    </label>
+                    {{ form.password1 }}
+                    {% if form.password1.help_text %}
+                        <div class="helptext">{{ form.password1.help_text }}</div>
+                    {% endif %}
+                    {% if form.password1.errors %}
+                        <ul class="error-list">
+                            {% for error in form.password1.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+
+                <div class="form-row">
+                    <label for="{{ form.password2.id_for_label }}">
+                        {{ form.password2.label }}
+                        {% if form.password2.field.required %}<span class="required-field">*</span>{% endif %}
+                    </label>
+                    {{ form.password2 }}
+                    {% if form.password2.help_text %}
+                        <div class="helptext">{{ form.password2.help_text }}</div>
+                    {% endif %}
+                    {% if form.password2.errors %}
+                        <ul class="error-list">
+                            {% for error in form.password2.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- Permissions Section -->
+                <h3 style="color: var(--primary-color); margin: 30px 0 20px 0; border-bottom: 2px solid var(--primary-color); padding-bottom: 10px;">
+                    🛡️ Permissions & Status
+                </h3>
+
+                {% if form.is_active %}
+                <div class="checkbox-row">
+                    {{ form.is_active }}
+                    <label for="{{ form.is_active.id_for_label }}">
+                        {{ form.is_active.label }}
+                        {% if form.is_active.help_text %}
+                            <div class="helptext">{{ form.is_active.help_text }}</div>
+                        {% endif %}
+                    </label>
+                </div>
+                {% endif %}
+
+                <div class="checkbox-row">
+                    {{ form.is_staff }}
+                    <label for="{{ form.is_staff.id_for_label }}">
+                        {{ form.is_staff.label }}
+                        {% if form.is_staff.help_text %}
+                            <div class="helptext">{{ form.is_staff.help_text }}</div>
+                        {% endif %}
+                    </label>
+                </div>
+
+                <div class="checkbox-row">
+                    {{ form.is_superuser }}
+                    <label for="{{ form.is_superuser.id_for_label }}">
+                        {{ form.is_superuser.label }}
+                        {% if form.is_superuser.help_text %}
+                            <div class="helptext">{{ form.is_superuser.help_text }}</div>
+                        {% endif %}
+                    </label>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        {% if user_detail %}
+                            ✅ Update User
+                        {% else %}
+                            ➕ Create User
+                        {% endif %}
+                    </button>
+                    
+                    <a href="{% if user_detail %}{% url 'myapp:user_detail' user_detail.id %}{% else %}{% url 'myapp:user_list' %}{% endif %}" 
+                       class="btn" style="background-color: var(--secondary-color); color: white;">
+                        ❌ Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Help Section -->
+        <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-top: 30px; max-width: 600px; margin: 30px auto 0;">
+            <h3 style="color: var(--info-color); margin-bottom: 15px;">ℹ️ Help</h3>
+            <ul style="list-style: none; padding: 0; color: #666;">
+                <li style="margin-bottom: 10px;">
+                    <strong>Required fields</strong> are marked with <span class="required-field">*</span>
+                </li>
+                <li style="margin-bottom: 10px;">
+                    <strong>Staff status</strong> allows access to the admin interface
+                </li>
+                <li style="margin-bottom: 10px;">
+                    <strong>Superuser status</strong> grants all permissions automatically
+                </li>
+                {% if not user_detail %}
+                <li style="margin-bottom: 10px;">
+                    <strong>Password</strong> must be at least 8 characters long
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+
+    <footer style="background: var(--dark-color); color: white; text-align: center; padding: 20px; margin-top: 60px;">
+        <p>&copy; 2025 CandlestickPattern - User Management System</p>
+    </footer>
+</body>
+</html>

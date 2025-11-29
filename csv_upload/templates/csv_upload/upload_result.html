@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}Upload Results - CandlestickPattern{% endblock %}
+
+{% block content %}
+<header style="text-align: center; margin: 40px 0;">
+    {% if result.success %}
+        <h1>✅ Upload Successful!</h1>
+        <p style="font-size: 1.2em; color: #28a745;">Your stock data has been processed successfully</p>
+    {% else %}
+        <h1>❌ Upload Failed</h1>
+        <p style="font-size: 1.2em; color: #dc3545;">There was an error processing your file</p>
+    {% endif %}
+</header>
+
+<main>
+    <!-- Results Summary -->
+    <section style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin: 20px 0;">
+        {% if result.success %}
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                <div style="text-align: center; padding: 20px; background: #d4edda; border-radius: 8px; border: 1px solid #c3e6cb;">
+                    <div style="font-size: 2em; color: #155724;">📈</div>
+                    <h3 style="color: #155724; margin: 10px 0;">{{ result.stocks_processed }}</h3>
+                    <p style="color: #155724; margin: 0;">Stocks Processed</p>
+                </div>
+                <div style="text-align: center; padding: 20px; background: #d1ecf1; border-radius: 8px; border: 1px solid #bee5eb;">
+                    <div style="font-size: 2em; color: #0c5460;">🕯️</div>
+                    <h3 style="color: #0c5460; margin: 10px 0;">{{ result.candlesticks_processed }}</h3>
+                    <p style="color: #0c5460; margin: 0;">Candlestick Records</p>
+                </div>
+                <div style="text-align: center; padding: 20px; background: #fff3cd; border-radius: 8px; border: 1px solid #ffeaa7;">
+                    <div style="font-size: 2em; color: #856404;">🏢</div>
+                    <h3 style="color: #856404; margin: 10px 0;">{{ result.exchange }}</h3>
+                    <p style="color: #856404; margin: 0;">Exchange</p>
+                </div>
+                <div style="text-align: center; padding: 20px; background: #e2e3e5; border-radius: 8px; border: 1px solid #d6d8db;">
+                    <div style="font-size: 2em; color: #383d41;">📅</div>
+                    <h3 style="color: #383d41; margin: 10px 0;">{{ result.date }}</h3>
+                    <p style="color: #383d41; margin: 0;">Trading Date</p>
+                </div>
+            </div>
+        {% else %}
+            <div style="text-align: center; padding: 40px; background: #f8d7da; border-radius: 8px; border: 1px solid #f5c6cb; color: #721c24;">
+                <div style="font-size: 3em; margin-bottom: 20px;">❌</div>
+                <h3>Processing Failed</h3>
+                <p style="font-size: 1.1em; margin: 15px 0;">{{ result.error }}</p>
+            </div>
+        {% endif %}
+    </section>
+
+    <!-- Warnings Section -->
+    {% if result.warnings %}
+        <section style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin: 20px 0;">
+            <h3 style="color: #856404; margin-bottom: 20px;">⚠️ Warnings ({{ result.warnings|length }})</h3>
+            <div style="max-height: 300px; overflow-y: auto; background: #fff3cd; padding: 20px; border-radius: 8px; border: 1px solid #ffeaa7;">
+                {% for warning in result.warnings %}
+                    <div style="margin-bottom: 10px; color: #856404;">
+                        <span style="font-weight: bold;">⚠️</span> {{ warning }}
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
+    {% endif %}
+
+    <!-- Errors Section -->
+    {% if result.errors %}
+        <section style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin: 20px 0;">
+            <h3 style="color: #721c24; margin-bottom: 20px;">❌ Errors ({{ result.errors|length }})</h3>
+            <div style="max-height: 300px; overflow-y: auto; background: #f8d7da; padding: 20px; border-radius: 8px; border: 1px solid #f5c6cb;">
+                {% for error in result.errors %}
+                    <div style="margin-bottom: 10px; color: #721c24;">
+                        <span style="font-weight: bold;">❌</span> {{ error }}
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
+    {% endif %}
+
+    <!-- Action Buttons -->
+    <section style="text-align: center; margin: 40px 0;">
+        <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
+            <a href="{% url 'csv_upload:upload_csv' %}" class="btn btn-primary">
+                📤 Upload Another File
+            </a>
+            <a href="{% url 'csv_upload:csv_list' %}" class="btn btn-success">
+                📋 View All Data
+            </a>
+            <a href="{% url 'myapp:home' %}" class="btn" style="background-color: var(--info-color); color: white;">
+                🏠 Back to Home
+            </a>
+        </div>
+    </section>
+</main>
+{% endblock %}

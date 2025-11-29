@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+
+{% block title %}Upload Stock Data - CandlestickPattern{% endblock %}
+
+{% block content %}
+<header style="text-align: center; margin: 40px 0;">
+    <h1>📤 Upload Stock Data</h1>
+    <p style="font-size: 1.2em; color: #666;">Upload daily stock data for candlestick pattern analysis</p>
+</header>
+
+<!-- Display Messages -->
+{% if messages %}
+    <div style="margin-bottom: 30px;">
+        {% for message in messages %}
+            <div style="padding: 15px; margin: 10px 0; border-radius: 8px; {% if message.tags == 'error' %}background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;{% elif message.tags == 'warning' %}background: #fff3cd; color: #856404; border: 1px solid #ffeaa7;{% elif message.tags == 'success' %}background: #d4edda; color: #155724; border: 1px solid #c3e6cb;{% else %}background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb;{% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<main>
+    <!-- Upload Options Tabs -->
+    <div style="background: white; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin: 20px auto; max-width: 900px; overflow: hidden;">
+        <!-- Tab Headers -->
+        <div style="display: flex; border-bottom: 2px solid #f8f9fa;">
+            <button class="upload-tab" data-tab="single" style="flex: 1; padding: 20px; background: var(--primary-color); color: white; border: none; cursor: pointer; font-size: 1.1em; font-weight: 500;">
+                📄 Single CSV File
+            </button>
+            <button class="upload-tab" data-tab="folder" style="flex: 1; padding: 20px; background: #f8f9fa; color: #666; border: none; cursor: pointer; font-size: 1.1em; font-weight: 500;">
+                📁 Multiple Files (ZIP)
+            </button>
+        </div>
+        
+        <!-- Single File Upload Tab -->
+        <div id="single-tab" class="tab-content" style="padding: 40px; display: block;">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <div style="font-size: 3em; margin-bottom: 15px; color: var(--primary-color);">📊</div>
+                <h3 style="color: var(--dark-color); margin-bottom: 10px;">Select Your Stock Data CSV File</h3>
+                <p style="color: #666;">Upload daily stock data with proper filename format</p>
+                <p style="color: #e74c3c; font-size: 0.9em; margin: 10px 0;">
+                    ⚠️ Files are processed and immediately removed to save space - only metadata is kept
+                </p>
+            </div>
+
+            <form method="post" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 25px;">
+                {% csrf_token %}
+                
+                <div style="padding: 25px; border: 2px dashed var(--primary-color); border-radius: 8px; text-align: center; background: rgba(52, 152, 219, 0.05);">
+                    <div style="margin-bottom: 20px;">
+                        <div style="font-size: 2em; color: var(--primary-color); margin-bottom: 10px;">📁</div>
+                        <h4 style="color: var(--dark-color); margin-bottom: 5px;">Choose CSV File</h4>
+                        <p style="color: #666; margin: 0; font-size: 0.9em;">Filename must follow format: <code>YYYYMMDD_EXCHANGE.csv</code></p>
+                    </div>
+                    {{ single_form.file }}
+                    {% if single_form.file.help_text %}
+                        <p style="margin-top: 10px; color: #666; font-size: 0.9em;">{{ single_form.file.help_text }}</p>
+                    {% endif %}
+                </div>
+                
+                <button type="submit" name="single_file_submit" class="btn btn-primary" style="padding: 15px 30px; font-size: 1.1em; align-self: center; min-width: 200px;">
+                    📤 Upload and Process CSV
+                </button>
+            </form>
+        </div>
+        
+        <!-- Folder Upload Tab -->
+        <div id="folder-tab" class="tab-content" style="padding: 40px; display: none;">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <div style="font-size: 3em; margin-bottom: 15px; color: var(--secondary-color);">📁</div>
+                <h3 style="color: var(--dark-color); margin-bottom: 10px;">Upload Multiple CSV Files</h3>
+                <p style="color: #666;">Upload a ZIP file containing multiple CSV files</p>
+                <p style="color: #e74c3c; font-size: 0.9em; margin: 10px 0;">
+                    ⚠️ All CSV files in the ZIP will be processed sequentially and removed to save space
+                </p>
+            </div>
+
+            <form method="post" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 25px;">
+                {% csrf_token %}
+                
+                <div style="padding: 25px; border: 2px dashed #9b59b6; border-radius: 8px; text-align: center; background: rgba(155, 89, 182, 0.05);">
+                    <div style="margin-bottom: 20px;">
+                        <div style="font-size: 2em; color: #9b59b6; margin-bottom: 10px;">📦</div>
+                        <h4 style="color: var(--dark-color); margin-bottom: 5px;">Choose ZIP File</h4>
+                        <p style="color: #666; margin: 0; font-size: 0.9em;">ZIP containing CSV files with format: <code>YYYYMMDD_EXCHANGE.csv</code></p>
+                    </div>
+                    {{ folder_form.folder_zip }}
+                    {% if folder_form.folder_zip.help_text %}
+                        <p style="margin-top: 10px; color: #666; font-size: 0.9em;">{{ folder_form.folder_zip.help_text }}</p>
+                    {% endif %}
+                </div>
+                
+                <button type="submit" name="folder_submit" class="btn" style="padding: 15px 30px; font-size: 1.1em; align-self: center; min-width: 200px; background: #9b59b6; color: white; border: none; border-radius: 5px;">
+                    📦 Upload and Process ZIP
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- File Requirements -->
+    <div style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin: 20px auto; max-width: 900px;">
+        <h4 style="color: var(--info-color); margin-bottom: 20px;">📋 File Format Requirements</h4>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 25px;">
+            <div>
+                <h5 style="color: var(--dark-color); margin-bottom: 10px;">🗂️ Filename Format</h5>
+                <ul style="color: #666; line-height: 1.8; padding-left: 20px; margin: 0;">
+                    <li>Pattern: <code>YYYYMMDD_EXCHANGE.csv</code></li>
+                    <li>Example: <code>20250101_BSE.csv</code></li>
+                    <li>Example: <code>20241225_NSE.csv</code></li>
+                    <li>Date: 8 digits (YYYY-MM-DD)</li>
+                    <li>Exchange: BSE, NSE supported</li>
+                </ul>
+            </div>
+            
+            <div>
+                <h5 style="color: var(--dark-color); margin-bottom: 10px;">📊 File Specifications</h5>
+                <ul style="color: #666; line-height: 1.8; padding-left: 20px; margin: 0;">
+                    <li>Single CSV: Max 10MB</li>
+                    <li>ZIP archive: Max 50MB</li>
+                    <li>Encoding: UTF-8</li>
+                    <li>Header row: Required</li>
+                    <li>Delimiter: Comma (,) or Tab</li>
+                </ul>
+            </div>
+        </div>
+        
+        <h5 style="color: var(--dark-color); margin-bottom: 15px;">📋 Required CSV Columns</h5>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px;">
+            <div>
+                <h6 style="color: #e74c3c; margin-bottom: 10px;">🏢 BSE Format</h6>
+                <ul style="color: #666; line-height: 1.6; padding-left: 20px; margin: 0; font-size: 0.9em;">
+                    <li><code>SC_CODE</code> - Stock symbol</li>
+                    <li><code>SC_NAME</code> - Company name</li>
+                    <li><code>SC_GROUP</code> - Stock group</li>
+                    <li><code>OPEN, HIGH, LOW, CLOSE</code> - Prices</li>
+                    <li><code>PREVCLOSE</code> - Previous close</li>
+                    <li><code>NO_TRADES, NO_OF_SHRS, NET_TURNOV</code> - Trading data</li>
+                </ul>
+            </div>
+            <div>
+                <h6 style="color: #27ae60; margin-bottom: 10px;">🏛️ NSE Format</h6>
+                <ul style="color: #666; line-height: 1.6; padding-left: 20px; margin: 0; font-size: 0.9em;">
+                    <li><code>SYMBOL</code> - Stock symbol</li>
+                    <li><code>SERIES</code> - Stock series</li>
+                    <li><code>OPEN, HIGH, LOW, CLOSE</code> - Prices</li>
+                    <li><code>PREVCLOSE</code> - Previous close</li>
+                    <li><code>TOTALTRADES, TOTTRDQTY, TOTTRDVAL</code> - Trading data</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <section style="background: linear-gradient(135deg, var(--success-color), var(--info-color)); color: white; padding: 30px; border-radius: 10px; margin: 40px auto; max-width: 900px; text-align: center;">
+        <h3 style="margin-bottom: 20px;">Quick Actions</h3>
+        <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
+            <a href="{% url 'csv_upload:csv_list' %}" class="btn" style="background-color: rgba(255,255,255,0.2); color: white; border: 2px solid white;">
+                📋 View Upload History
+            </a>
+            <a href="{% url 'myapp:home' %}" class="btn" style="background-color: rgba(255,255,255,0.2); color: white; border: 2px solid white;">
+                🏠 Back to Home
+            </a>
+        </div>
+    </section>
+</main>
+
+<script>
+// Tab switching functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const tabs = document.querySelectorAll('.upload-tab');
+    const contents = document.querySelectorAll('.tab-content');
+    
+    tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            const targetTab = this.getAttribute('data-tab');
+            
+            // Update tab appearance
+            tabs.forEach(t => {
+                t.style.background = '#f8f9fa';
+                t.style.color = '#666';
+            });
+            this.style.background = targetTab === 'single' ? 'var(--primary-color)' : '#9b59b6';
+            this.style.color = 'white';
+            
+            // Show/hide content
+            contents.forEach(content => {
+                content.style.display = 'none';
+            });
+            document.getElementById(targetTab + '-tab').style.display = 'block';
+        });
+    });
+});
+</script>
+{% endblock %}

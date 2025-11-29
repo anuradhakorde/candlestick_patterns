@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management - CandlestickPattern</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        .search-form {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .user-table {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .user-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .user-actions a {
+            padding: 5px 10px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 0.9em;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+            gap: 10px;
+        }
+        .pagination a, .pagination span {
+            padding: 8px 12px;
+            border-radius: 4px;
+            text-decoration: none;
+        }
+        .pagination .current {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .user-status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        .status-active { background-color: #d4edda; color: #155724; }
+        .status-inactive { background-color: #f8d7da; color: #721c24; }
+        .status-staff { background-color: #d1ecf1; color: #0c5460; }
+        .status-super { background-color: #fff3cd; color: #856404; }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="container">
+            <h1><a href="{% url 'myapp:home' %}" style="color: white; text-decoration: none;">CandlestickPattern</a></h1>
+            <ul>
+                <li><a href="{% url 'myapp:home' %}">Home</a></li>
+                <li><a href="{% url 'myapp:user_list' %}" class="active">Users</a></li>
+                <li><a href="{% url 'csv_upload:upload_csv' %}">Upload CSV</a></li>
+                <li><a href="{% url 'csv_upload:csv_list' %}">CSV Files</a></li>
+                <li><a href="/admin/">Admin</a></li>
+                <li><a href="{% url 'myapp:profile' %}">Profile</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header style="margin: 40px 0 20px 0;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1>User Management</h1>
+                    <p style="color: #666; margin: 5px 0;">Manage all user accounts (Total: {{ total_users }} users)</p>
+                </div>
+                <a href="{% url 'myapp:user_create' %}" class="btn btn-primary">
+                    ➕ Add New User
+                </a>
+            </div>
+        </header>
+
+        <!-- Search Form -->
+        <form method="GET" class="search-form">
+            <div style="display: flex; gap: 15px; align-items: end;">
+                <div style="flex: 1;">
+                    <label for="search">Search Users:</label>
+                    <input type="text" id="search" name="search" value="{{ search_query }}" 
+                           placeholder="Search by username, name, or email..." 
+                           style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                <button type="submit" class="btn btn-primary">🔍 Search</button>
+                {% if search_query %}
+                    <a href="{% url 'myapp:user_list' %}" class="btn" style="background-color: var(--secondary-color); color: white;">Clear</a>
+                {% endif %}
+            </div>
+        </form>
+
+        <!-- Users Table -->
+        <div class="user-table">
+            <table style="margin: 0;">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                        <th>Joined</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in page_obj %}
+                    <tr>
+                        <td>
+                            <strong>{{ user.username }}</strong>
+                            {% if user.is_superuser %}
+                                <span class="user-status status-super">SUPER</span>
+                            {% elif user.is_staff %}
+                                <span class="user-status status-staff">STAFF</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ user.get_full_name|default:"—" }}</td>
+                        <td>{{ user.email|default:"—" }}</td>
+                        <td>
+                            {% if user.is_active %}
+                                <span class="user-status status-active">Active</span>
+                            {% else %}
+                                <span class="user-status status-inactive">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ user.date_joined|date:"M j, Y" }}</td>
+                        <td>
+                            <div class="user-actions">
+                                <a href="{% url 'myapp:user_detail' user.id %}" 
+                                   style="background-color: var(--info-color); color: white;">👁️ View</a>
+                                <a href="{% url 'myapp:user_edit' user.id %}" 
+                                   style="background-color: var(--warning-color); color: white;">✏️ Edit</a>
+                                {% if user != request.user %}
+                                    <a href="{% url 'myapp:user_delete' user.id %}" 
+                                       style="background-color: var(--danger-color); color: white;">🗑️ Delete</a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 40px; color: #666;">
+                            {% if search_query %}
+                                No users found matching "{{ search_query }}".
+                            {% else %}
+                                No users found.
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}">« First</a>
+                <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">‹ Previous</a>
+            {% endif %}
+            
+            <span class="current">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </span>
+            
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Next ›</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}">Last »</a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Quick Stats -->
+        <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-top: 20px;">
+            <h3 style="margin-bottom: 15px; color: var(--dark-color);">Quick Statistics</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                <div style="text-align: center;">
+                    <div style="font-size: 2em; font-weight: bold; color: var(--primary-color);">{{ total_users }}</div>
+                    <div style="color: #666;">Total Users</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 2em; font-weight: bold; color: var(--success-color);">{{ page_obj.paginator.count }}</div>
+                    <div style="color: #666;">
+                        {% if search_query %}Search Results{% else %}Active Users{% endif %}
+                    </div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 2em; font-weight: bold; color: var(--info-color);">{{ page_obj.paginator.num_pages }}</div>
+                    <div style="color: #666;">Total Pages</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer style="background: var(--dark-color); color: white; text-align: center; padding: 20px; margin-top: 60px;">
+        <p>&copy; 2025 CandlestickPattern - User Management System</p>
+    </footer>
+</body>
+</html>
