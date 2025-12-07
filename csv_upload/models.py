@@ -30,7 +30,10 @@ class Stock(models.Model):
         unique_together = ('stock_symbol', 'stock_exchange')
 
     def __str__(self):
-        return f"{self.stock_symbol} ({self.stock_exchange})"
+        if self.stock_name:
+            return f"{self.stock_name} ({self.stock_exchange})"
+        else:
+            return f"{self.stock_symbol} ({self.stock_exchange})"
 
 
 class Candlestick(models.Model):

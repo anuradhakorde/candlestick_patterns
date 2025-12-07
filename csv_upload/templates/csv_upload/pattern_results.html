@@ -1,0 +1,595 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Pattern Analysis Results{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+<style>
+    .results-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+    }
+    
+    .pattern-summary {
+        background: white;
+        border-radius: 10px;
+        padding: 25px;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+    
+    .stock-card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 25px;
+        border-left: 5px solid #3498db;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .pattern-badge {
+        display: inline-block;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin: 3px;
+    }
+    
+    .pattern-hammer { background-color: #e74c3c; color: white; }
+    .pattern-harami { background-color: #f39c12; color: white; }
+    .pattern-doji { background-color: #9b59b6; color: white; }
+    
+    .chart-container {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+        position: relative;
+        height: 400px;
+    }
+    
+    .no-patterns {
+        text-align: center;
+        padding: 50px;
+        color: #7f8c8d;
+        background: #ecf0f1;
+        border-radius: 10px;
+        margin: 20px 0;
+    }
+    
+    .pattern-details {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        margin: 15px 0;
+    }
+    
+    .pattern-instance {
+        border-bottom: 1px solid #dee2e6;
+        padding: 10px 0;
+    }
+    
+    .pattern-instance:last-child {
+        border-bottom: none;
+    }
+    
+    .date-badge {
+        background: #17a2b8;
+        color: white;
+        padding: 3px 8px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+    }
+    
+    .strength-meter {
+        width: 100%;
+        height: 8px;
+        background: #e9ecef;
+        border-radius: 4px;
+        overflow: hidden;
+        margin: 5px 0;
+    }
+    
+    .strength-fill {
+        height: 100%;
+        background: linear-gradient(to right, #ffc107, #28a745);
+        transition: width 0.3s ease;
+    }
+    
+    .mini-candlestick-chart {
+        text-align: center;
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+        min-height: 120px;
+    }
+    
+    .mini-candlestick-chart canvas {
+        border-radius: 4px;
+        background: white;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        margin: 5px 0;
+    }
+    
+    .css-candlestick {
+        width: 60px;
+        height: 80px;
+        margin: 10px auto;
+        position: relative;
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .candle-body {
+        width: 8px;
+        height: 40px;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .candle-body.bullish {
+        background-color: #28a745;
+        border: 1px solid #1e7e34;
+    }
+    
+    .candle-body.bearish {
+        background-color: #dc3545;
+        border: 1px solid #c82333;
+    }
+    
+    .candle-body.pattern-hammer {
+        border-width: 2px;
+        box-shadow: 0 2px 4px rgba(255, 193, 7, 0.3);
+    }
+    
+    .candle-body.pattern-doji {
+        height: 4px !important;
+        background-color: #6f42c1 !important;
+        border-color: #5a2d91 !important;
+        box-shadow: 0 0 4px rgba(111, 66, 193, 0.5);
+    }
+    
+    .candle-body.pattern-harami {
+        border-width: 2px;
+        box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+    }
+    
+    .candle-wick {
+        position: absolute;
+        width: 1px;
+        height: 60px;
+        background-color: #666;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1;
+    }
+    
+    .summary-stat {
+        text-align: center;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .summary-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #2c3e50;
+        display: block;
+    }
+    
+    .summary-label {
+        color: #7f8c8d;
+        font-size: 0.9rem;
+    }
+    
+    .back-button {
+        background: #6c757d;
+        border: none;
+        color: white;
+        padding: 10px 25px;
+        border-radius: 20px;
+        text-decoration: none;
+        display: inline-block;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+    
+    .back-button:hover {
+        background: #495057;
+        color: white;
+        text-decoration: none;
+        transform: translateY(-2px);
+    }
+    
+    .export-btn {
+        background: #28a745;
+        border: none;
+        color: white;
+        padding: 8px 15px;
+        border-radius: 15px;
+        font-size: 0.9rem;
+        margin: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Back Button -->
+    <a href="{% url 'csv_upload:pattern_analysis_home' %}" class="back-button">
+        <i class="fas fa-arrow-left"></i> Back to Analysis
+    </a>
+    
+    <!-- Results Header -->
+    <div class="results-header">
+        <div class="row">
+            <div class="col-md-8">
+                <h1><i class="fas fa-chart-line"></i> Pattern Analysis Results</h1>
+                <p class="mb-0">Analysis completed for {{ selected_patterns|length }} pattern(s) across {{ selected_stocks|length }} stock(s)</p>
+                {% if date_range.from or date_range.to %}
+                    <small>
+                        Date Range: 
+                        {{ date_range.from|default:"All time" }} - {{ date_range.to|default:"Present" }}
+                    </small>
+                {% endif %}
+            </div>
+            <div class="col-md-4 text-right">
+                <button class="export-btn" onclick="exportResults()">
+                    <i class="fas fa-download"></i> Export Results
+                </button>
+                <button class="export-btn" onclick="window.print()">
+                    <i class="fas fa-print"></i> Print
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Summary Statistics -->
+    <div class="pattern-summary">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="summary-stat">
+                    <span class="summary-number">{{ analysis_results.total_patterns }}</span>
+                    <span class="summary-label">Total Patterns Found</span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="summary-stat">
+                    <span class="summary-number">{{ analysis_results.stocks_analyzed }}</span>
+                    <span class="summary-label">Stocks Analyzed</span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="summary-stat">
+                    <span class="summary-number">{{ selected_patterns|length }}</span>
+                    <span class="summary-label">Pattern Types</span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="summary-stat">
+                    <span class="summary-number">
+                        {% if analysis_results.total_patterns > 0 %}
+                            {{ analysis_results.total_patterns|floatformat:0 }}%
+                        {% else %}
+                            0%
+                        {% endif %}
+                    </span>
+                    <span class="summary-label">Success Rate</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-3">
+            <strong>Selected Patterns:</strong>
+            {% for pattern in selected_patterns %}
+                <span class="pattern-badge pattern-{{ pattern }}">
+                    {% if pattern == "hammer" %}Hammer
+                    {% elif pattern == "harami" %}Harami (Bullish/Bearish)
+                    {% elif pattern == "doji" %}Doji
+                    {% else %}{{ pattern|title }}
+                    {% endif %}
+                </span>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Results for Each Stock -->
+    {% if analysis_results.patterns_found %}
+        {% for stock_symbol, patterns in analysis_results.patterns_found.items %}
+            <div class="stock-card">
+                <div class="row">
+                    <div class="col-md-12">
+                        <h3>
+                            <i class="fas fa-building"></i> 
+                            {{ stock_symbol }}
+                            {% for stock in selected_stocks %}
+                                {% if stock.stock_symbol == stock_symbol %}
+                                    <small class="text-muted"> - {{ stock.stock_name|default:stock_symbol }}</small>
+                                    <span class="badge badge-info">{{ stock.stock_exchange }}</span>
+                                {% endif %}
+                            {% endfor %}
+                        </h3>
+                        
+                        {% if patterns %}
+                            <div class="pattern-details">
+                                {% for pattern_type, instances in patterns.items %}
+                                    <h5>
+                                        <span class="pattern-badge pattern-{{ pattern_type }}">
+                                            {{ pattern_type|title }} ({{ instances|length }})
+                                        </span>
+                                    </h5>
+                                    
+                                    {% for instance in instances %}
+                                        <div class="pattern-instance">
+                                            <div class="row">
+                                                <div class="col-md-4">
+                                                    <span class="date-badge">{{ instance.candle_date|date:"M d, Y" }}</span>
+                                                    <div class="mt-2">
+                                                        <small>
+                                                            O: ₹{{ instance.open_price|floatformat:2 }} | 
+                                                            H: ₹{{ instance.high_price|floatformat:2 }} | 
+                                                            L: ₹{{ instance.low_price|floatformat:2 }} | 
+                                                            C: ₹{{ instance.close_price|floatformat:2 }}
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <small>Pattern Strength:</small>
+                                                    <div class="strength-meter">
+                                                        <div class="strength-fill" style="width: {{ instance.pattern_strength|floatformat:0 }}%"></div>
+                                                    </div>
+                                                    <small class="text-muted">{{ instance.pattern_strength|floatformat:2 }}</small>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <!-- Individual Candlestick Chart -->
+                                                    <div class="mini-candlestick-chart">
+                                                        <!-- CSS-based candlestick -->
+                                                        <div class="css-candlestick" 
+                                                             data-open="{{ instance.open_price }}" 
+                                                             data-high="{{ instance.high_price }}" 
+                                                             data-low="{{ instance.low_price }}" 
+                                                             data-close="{{ instance.close_price }}"
+                                                             data-pattern="{{ pattern_type }}">
+                                                            <div class="candle-wick"></div>
+                                                            <div class="candle-body {% if instance.close_price > instance.open_price %}bullish{% else %}bearish{% endif %} pattern-{{ pattern_type }}"></div>
+                                                        </div>
+                                                        
+                                                        <div class="text-center mt-1">
+                                                            <small class="text-muted">{{ pattern_type|title }} Pattern</small>
+                                                        </div>
+                                                        <!-- Price details -->
+                                                        <div class="text-center mt-1" style="font-size: 9px; color: #666;">
+                                                            OHLC: {{ instance.open_price|floatformat:1 }} | {{ instance.high_price|floatformat:1 }} | {{ instance.low_price|floatformat:1 }} | {{ instance.close_price|floatformat:1 }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="no-patterns">
+            <i class="fas fa-search fa-3x"></i>
+            <h3>No Patterns Found</h3>
+            <p>No candlestick patterns were detected for the selected criteria.</p>
+            <ul class="text-left" style="display: inline-block;">
+                <li>Try expanding the date range</li>
+                <li>Select different stocks</li>
+                <li>Choose different pattern types</li>
+                <li>Check if the stocks have sufficient data</li>
+            </ul>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Chart Data for JavaScript -->
+<script id="chart-data" type="application/json">
+{{ chart_data|safe }}
+</script>
+
+<script>
+// Chart initialization
+document.addEventListener('DOMContentLoaded', function() {
+    // Create mini candlestick charts for individual patterns (with delay)
+    setTimeout(() => {
+        createMiniCandlestickCharts();
+    }, 100);
+});
+
+// Function to create mini candlestick charts for individual patterns
+function createMiniCandlestickCharts() {
+    const miniCanvases = document.querySelectorAll('canvas[id^="mini-chart-"]');
+    console.log('Found mini canvases:', miniCanvases.length);
+    
+    miniCanvases.forEach((canvas, index) => {
+        console.log(`Processing canvas ${index}:`, canvas.id);
+        
+        const ctx = canvas.getContext('2d');
+        
+        // First, draw a test pattern to confirm canvas is working
+        ctx.fillStyle = '#007bff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#fff';
+        ctx.font = '10px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('TEST', canvas.width/2, canvas.height/2);
+        
+        // Then try to read the actual data
+        const open = parseFloat(canvas.dataset.open);
+        const high = parseFloat(canvas.dataset.high);
+        const low = parseFloat(canvas.dataset.low);
+        const close = parseFloat(canvas.dataset.close);
+        const pattern = canvas.dataset.pattern;
+        
+        console.log(`Canvas ${index} data:`, {
+            open, high, low, close, pattern,
+            width: canvas.width,
+            height: canvas.height,
+            hasValidData: !isNaN(open) && !isNaN(high) && !isNaN(low) && !isNaN(close)
+        });
+        
+        // If we have valid data, draw the actual candlestick
+        if (!isNaN(open) && !isNaN(high) && !isNaN(low) && !isNaN(close)) {
+            setTimeout(() => {
+                drawMiniCandlestick(ctx, canvas.width, canvas.height, open, high, low, close, pattern);
+            }, 500 + index * 100); // Staggered drawing for debugging
+        }
+        
+        console.log(`Canvas ${index} processed`);
+    });
+}
+
+function drawMiniCandlestick(ctx, width, height, open, high, low, close, pattern) {
+    console.log('Drawing candlestick:', {width, height, open, high, low, close, pattern});
+    
+    // Set canvas background for debugging
+    ctx.fillStyle = '#f8f9fa';
+    ctx.fillRect(0, 0, width, height);
+    
+    const margin = 10;
+    const candleWidth = (width - 2 * margin) * 0.6;
+    const centerX = width / 2;
+    
+    // Check if we have valid data
+    if (!open || !high || !low || !close || isNaN(open) || isNaN(high) || isNaN(low) || isNaN(close)) {
+        console.error('Invalid price data:', {open, high, low, close});
+        // Draw error indicator
+        ctx.fillStyle = '#e74c3c';
+        ctx.fillRect(margin, margin, width - 2*margin, height - 2*margin);
+        ctx.fillStyle = '#fff';
+        ctx.font = '10px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('No Data', centerX, height/2);
+        return;
+    }
+    
+    // Calculate scaling
+    const priceRange = high - low;
+    const pixelRange = height - 2 * margin;
+    const scale = pixelRange / priceRange;
+    
+    console.log('Drawing params:', {margin, candleWidth, centerX, priceRange, pixelRange, scale});
+    
+    // Check for invalid scaling
+    if (priceRange <= 0 || !isFinite(scale)) {
+        console.error('Invalid price data or scaling:', {priceRange, scale});
+        // Draw a placeholder rectangle to show something is there
+        ctx.fillStyle = '#ffc107';
+        ctx.fillRect(margin, margin, width - 2*margin, height - 2*margin);
+        ctx.strokeStyle = '#999';
+        ctx.strokeRect(margin, margin, width - 2*margin, height - 2*margin);
+        ctx.fillStyle = '#000';
+        ctx.font = '8px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Doji', centerX, height/2);
+        return;
+    }
+    
+    function priceToY(price) {
+        return margin + (high - price) * scale;
+    }
+    
+    // Draw high-low line (wick)
+    ctx.strokeStyle = '#666';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(centerX, priceToY(high));
+    ctx.lineTo(centerX, priceToY(low));
+    ctx.stroke();
+    
+    // Determine candle color and body
+    const isGreen = close > open;
+    const bodyTop = Math.max(open, close);
+    const bodyBottom = Math.min(open, close);
+    
+    // Draw body
+    const bodyHeight = Math.max((bodyTop - bodyBottom) * scale, 2); // Minimum height of 2px
+    const bodyY = priceToY(bodyTop);
+    
+    if (isGreen) {
+        // Bullish (green) candle
+        ctx.fillStyle = pattern === 'hammer' ? '#27ae60' : '#2ecc71';
+        ctx.strokeStyle = '#1e8449';
+    } else {
+        // Bearish (red) candle
+        ctx.fillStyle = pattern === 'doji' ? '#e74c3c' : '#c0392b';
+        ctx.strokeStyle = '#922b21';
+    }
+    
+    ctx.lineWidth = 1;
+    ctx.fillRect(centerX - candleWidth/2, bodyY, candleWidth, bodyHeight);
+    ctx.strokeRect(centerX - candleWidth/2, bodyY, candleWidth, bodyHeight);
+    
+    // Add pattern-specific highlighting
+    if (pattern === 'hammer') {
+        // Highlight long lower shadow
+        ctx.strokeStyle = '#f39c12';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(centerX, priceToY(Math.min(open, close)));
+        ctx.lineTo(centerX, priceToY(low));
+        ctx.stroke();
+    } else if (pattern === 'doji') {
+        // Highlight small body
+        ctx.strokeStyle = '#8e44ad';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(centerX - candleWidth/2, bodyY, candleWidth, bodyHeight);
+    }
+    
+    console.log('Candlestick drawing completed');
+}
+
+// Export functionality
+function exportResults() {
+    const resultsData = {
+        analysis_date: new Date().toISOString(),
+        patterns: {{ analysis_results.patterns_found|safe }},
+        summary: {
+            total_patterns: {{ analysis_results.total_patterns }},
+            stocks_analyzed: {{ analysis_results.stocks_analyzed }},
+            selected_patterns: {{ selected_patterns|safe }}
+        }
+    };
+    
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(resultsData, null, 2));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", `pattern_analysis_${new Date().toISOString().split('T')[0]}.json`);
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+}
+
+// Print styles
+const style = document.createElement('style');
+style.textContent = `
+    @media print {
+        .back-button, .export-btn { display: none !important; }
+        .chart-container { height: 250px !important; }
+        .stock-card { page-break-inside: avoid; }
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

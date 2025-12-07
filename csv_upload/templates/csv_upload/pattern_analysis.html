@@ -1,0 +1,357 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Candlestick Pattern Analysis{% endblock %}
+
+{% block head %}
+<style>
+    .pattern-card {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        background: #f8f9fa;
+    }
+    
+    .pattern-checkbox {
+        margin: 10px 0;
+    }
+    
+    .stock-selector {
+        min-height: 200px;
+    }
+    
+    .form-section {
+        background: white;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+    
+    .section-title {
+        color: #2c3e50;
+        border-bottom: 2px solid #3498db;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .quick-search-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 30px;
+    }
+    
+    .quick-search-card .form-control,
+    .quick-search-card .form-select {
+        margin-bottom: 15px;
+    }
+    
+    .pattern-info {
+        background: #e8f4f8;
+        border-left: 4px solid #3498db;
+        padding: 15px;
+        margin: 15px 0;
+        border-radius: 5px;
+    }
+    
+    .stats-row {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+    }
+    
+    .stat-item {
+        text-align: center;
+        padding: 15px;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #3498db;
+    }
+    
+    .stat-label {
+        color: #7f8c8d;
+        font-size: 0.9rem;
+    }
+    
+    .btn-analyze {
+        background: linear-gradient(45deg, #3498db, #2ecc71);
+        border: none;
+        color: white;
+        padding: 12px 30px;
+        border-radius: 25px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-analyze:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">
+                <i class="fas fa-chart-line"></i> Candlestick Pattern Analysis
+            </h1>
+            
+            <!-- Statistics Row -->
+            <div class="stats-row">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="stat-item">
+                            <div class="stat-number">{{ total_stocks }}</div>
+                            <div class="stat-label">Total Stocks</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-item">
+                            <div class="stat-number">{{ available_patterns|length }}</div>
+                            <div class="stat-label">Pattern Types</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-item">
+                            <div class="stat-number">3</div>
+                            <div class="stat-label">Analysis Methods</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-item">
+                            <div class="stat-number">∞</div>
+                            <div class="stat-label">Possibilities</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Quick Search Card -->
+        <div class="col-lg-4">
+            <div class="quick-search-card">
+                <h3><i class="fas fa-search"></i> Quick Pattern Search</h3>
+                <p class="mb-3">Search for patterns in a specific stock quickly</p>
+                
+                <form method="post" action="{% url 'csv_upload:quick_pattern_search' %}">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        {{ quick_form.pattern.label_tag }}
+                        {{ quick_form.pattern }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ quick_form.stock_symbol.label_tag }}
+                        {{ quick_form.stock_symbol }}
+                        {% if quick_form.stock_symbol.help_text %}
+                            <small class="form-text text-light">{{ quick_form.stock_symbol.help_text }}</small>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ quick_form.days_back.label_tag }}
+                        {{ quick_form.days_back }}
+                    </div>
+                    
+                    <button type="submit" class="btn btn-light btn-block">
+                        <i class="fas fa-bolt"></i> Quick Search
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Advanced Analysis Form -->
+        <div class="col-lg-8">
+            <div class="form-section">
+                <h2 class="section-title">
+                    <i class="fas fa-cogs"></i> Advanced Pattern Analysis
+                </h2>
+                
+                <form method="post" action="{% url 'csv_upload:pattern_analysis_results' %}">
+                    {% csrf_token %}
+                    
+                    <!-- Pattern Selection -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="pattern-card">
+                                <h4><i class="fas fa-shapes"></i> Select Patterns</h4>
+                                {{ form.patterns.label_tag }}
+                                {% if form.patterns.help_text %}
+                                    <small class="form-text text-muted">{{ form.patterns.help_text }}</small>
+                                {% endif %}
+                                
+                                <div class="mt-3">
+                                    {% for choice in form.patterns %}
+                                        <div class="pattern-checkbox">
+                                            {{ choice.tag }}
+                                            <label for="{{ choice.id_for_label }}" class="form-check-label">
+                                                {{ choice.choice_label }}
+                                            </label>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                
+                                {% if form.patterns.errors %}
+                                    <div class="alert alert-danger mt-2">
+                                        {{ form.patterns.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Date Range -->
+                        <div class="col-md-6">
+                            <div class="pattern-card">
+                                <h4><i class="fas fa-calendar-alt"></i> Date Range</h4>
+                                <p class="text-muted">Optional: Filter analysis by date range</p>
+                                
+                                <div class="mb-3">
+                                    {{ form.date_from.label_tag }}
+                                    {{ form.date_from }}
+                                    {% if form.date_from.help_text %}
+                                        <small class="form-text text-muted">{{ form.date_from.help_text }}</small>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    {{ form.date_to.label_tag }}
+                                    {{ form.date_to }}
+                                    {% if form.date_to.help_text %}
+                                        <small class="form-text text-muted">{{ form.date_to.help_text }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Stock Selection -->
+                    <div class="pattern-card">
+                        <h4><i class="fas fa-building"></i> Select Stocks</h4>
+                        {{ form.stocks.label_tag }}
+                        {% if form.stocks.help_text %}
+                            <small class="form-text text-muted">{{ form.stocks.help_text }}</small>
+                        {% endif %}
+                        
+                        <div class="mt-3">
+                            {{ form.stocks }}
+                        </div>
+                        
+                        {% if form.stocks.errors %}
+                            <div class="alert alert-danger mt-2">
+                                {{ form.stocks.errors }}
+                            </div>
+                        {% endif %}
+                        
+                        <div class="mt-3">
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="selectAllStocks()">
+                                Select All
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearStockSelection()">
+                                Clear All
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Submit Button -->
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-analyze btn-lg">
+                            <i class="fas fa-search"></i> Analyze Patterns
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Pattern Information -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-info-circle"></i> Pattern Descriptions
+                </h3>
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="pattern-info">
+                            <h5><strong>Hammer Pattern</strong></h5>
+                            <p>A reversal pattern with a small body and long lower shadow. Indicates potential upward price movement.</p>
+                            <ul>
+                                <li>Small real body</li>
+                                <li>Long lower shadow (2x body size)</li>
+                                <li>Little to no upper shadow</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="pattern-info">
+                            <h5><strong>Harami Pattern</strong></h5>
+                            <p>A two-candlestick pattern where a small candle is engulfed by the previous large candle's body.</p>
+                            <ul>
+                                <li>Large first candle</li>
+                                <li>Small second candle within first</li>
+                                <li>Indicates potential reversal</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="pattern-info">
+                            <h5><strong>Doji Pattern</strong></h5>
+                            <p>A pattern where open and close prices are very close, indicating market indecision.</p>
+                            <ul>
+                                <li>Open ≈ Close</li>
+                                <li>Small or no real body</li>
+                                <li>Shows market uncertainty</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function selectAllStocks() {
+    const stockSelector = document.getElementById('id_stocks');
+    for (let i = 0; i < stockSelector.options.length; i++) {
+        stockSelector.options[i].selected = true;
+    }
+}
+
+function clearStockSelection() {
+    const stockSelector = document.getElementById('id_stocks');
+    for (let i = 0; i < stockSelector.options.length; i++) {
+        stockSelector.options[i].selected = false;
+    }
+}
+
+// Auto-submit quick search on Enter
+document.addEventListener('DOMContentLoaded', function() {
+    const quickForm = document.querySelector('.quick-search-card form');
+    const stockInput = document.querySelector('#id_stock_symbol');
+    
+    if (stockInput) {
+        stockInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                quickForm.submit();
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

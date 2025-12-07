@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 from . import stock_views
+from . import pattern_views
 
 app_name = 'csv_upload'
 
@@ -9,6 +10,15 @@ urlpatterns = [
     path('upload/', views.upload_csv, name='upload_csv'),
     path('upload/result/', views.upload_result, name='upload_result'),
     path('list/', views.csv_list, name='csv_list'),
+    
+    # Pattern Analysis functionality
+    path('patterns/', pattern_views.pattern_analysis_home, name='pattern_analysis_home'),
+    path('patterns/analyze/', pattern_views.pattern_analysis_results, name='pattern_analysis_results'),
+    path('patterns/quick/', pattern_views.quick_pattern_search, name='quick_pattern_search'),
+    path('patterns/history/<int:stock_id>/', pattern_views.pattern_history, name='pattern_history'),
+    
+    # Pattern Analysis API endpoints
+    path('api/stock-data/', pattern_views.get_stock_data_api, name='get_stock_data_api'),
     
     # Stock CRUD operations
     path('stocks/', stock_views.stock_list, name='stock_list'),

@@ -158,5 +158,10 @@ LOGGING = {
             'level': 'INFO',
             'propagate': True,
         },
+        'pattern_analysis': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
     },
 }
